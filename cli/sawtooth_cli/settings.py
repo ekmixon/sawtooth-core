@@ -109,9 +109,9 @@ def _do_settings_list(args):
         setting = Setting()
         setting.ParseFromString(decoded)
 
-        for entry in setting.entries:
-            if entry.key.startswith(prefix):
-                printable_settings.append(entry)
+        printable_settings.extend(
+            entry for entry in setting.entries if entry.key.startswith(prefix)
+        )
 
     printable_settings.sort(key=lambda s: s.key)
 
@@ -121,10 +121,13 @@ def _do_settings_list(args):
             # Set value width to the available terminal space, or the min width
             width = tty_width - len(setting.key) - 3
             width = width if width > _MIN_PRINT_WIDTH else _MIN_PRINT_WIDTH
-            value = (setting.value[:width] + '...'
-                     if len(setting.value) > width
-                     else setting.value)
-            print('{}: {}'.format(setting.key, value))
+            value = (
+                f'{setting.value[:width]}...'
+                if len(setting.value) > width
+                else setting.value
+            )
+
+            print(f'{setting.key}: {value}')
     elif args.format == 'csv':
         try:
             writer = csv.writer(sys.stdout, quoting=csv.QUOTE_ALL)
@@ -133,7 +136,7 @@ def _do_settings_list(args):
                 writer.writerow([setting.key, setting.value])
         except csv.Error:
             raise CliException('Error writing CSV') from CliException
-    elif args.format == 'json' or args.format == 'yaml':
+    elif args.format in ['json', 'yaml']:
         settings_snapshot = {
             'head': head,
             'settings': {setting.key: setting.value
@@ -142,9 +145,9 @@ def _do_settings_list(args):
         if args.format == 'json':
             print(json.dumps(settings_snapshot, indent=2, sort_keys=True))
         else:
-            print(yaml.dump(settings_snapshot, default_flow_style=False)[0:-1])
+            print(yaml.dump(settings_snapshot, default_flow_style=False)[:-1])
     else:
-        raise AssertionError('Unknown format {}'.format(args.format))
+        raise AssertionError(f'Unknown format {args.format}')
 
 
 def _key_to_address(key):

@@ -54,10 +54,7 @@ def is_valid_block(block):
 
     # validate all batches in block. These are not all batches in the
     # batch_ids stored in the block header, only those sent with the block.
-    if not all(map(is_valid_batch, block.batches)):
-        return False
-
-    return True
+    return all(map(is_valid_batch, block.batches))
 
 
 def is_valid_batch(batch):
@@ -177,10 +174,11 @@ class GossipMessageSignatureVerifier(Handler):
             return HandlerResult(status=HandlerStatus.PASS)
 
         if tag == GossipMessage.CONSENSUS:
-            if not is_valid_consensus_message(obj):
-                return HandlerResult(status=HandlerStatus.DROP)
-
-            return HandlerResult(status=HandlerStatus.PASS)
+            return (
+                HandlerResult(status=HandlerStatus.PASS)
+                if is_valid_consensus_message(obj)
+                else HandlerResult(status=HandlerStatus.DROP)
+            )
 
         # should drop the message if it does not have a valid content_type
         return HandlerResult(status=HandlerStatus.DROP)
@@ -245,7 +243,8 @@ class BatchListSignatureVerifier(Handler):
                 LOGGER.debug("TRACE %s: %s", batch.header_signature,
                              self.__class__.__name__)
 
-        if not all(map(is_valid_batch, message_content.batches)):
-            return make_response(response_proto.INVALID_BATCH)
-
-        return HandlerResult(status=HandlerStatus.PASS)
+        return (
+            HandlerResult(status=HandlerStatus.PASS)
+            if all(map(is_valid_batch, message_content.batches))
+            else make_response(response_proto.INVALID_BATCH)
+        )

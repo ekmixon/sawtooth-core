@@ -39,25 +39,19 @@ class DictDatabase(database.Database):
 
     def contains_key(self, key, index=None):
         if index is not None and index not in self._indexes:
-            raise ValueError('Index {} does not exist'.format(index))
+            raise ValueError(f'Index {index} does not exist')
 
-        if index:
-            return key.encode() in self._indexes[index][0]
-
-        return key in self._data
+        return key.encode() in self._indexes[index][0] if index else key in self._data
 
     def count(self, index=None):
         if index is not None and index not in self._indexes:
-            raise ValueError('Index {} does not exist'.format(index))
+            raise ValueError(f'Index {index} does not exist')
 
-        if index:
-            return len(self._indexes[index][0])
-
-        return len(self._data)
+        return len(self._indexes[index][0]) if index else len(self._data)
 
     def get_multi(self, keys, index=None):
         if index is not None and index not in self._indexes:
-            raise ValueError('Index {} does not exist'.format(index))
+            raise ValueError(f'Index {index} does not exist')
 
         out = []
         for key in keys:
@@ -74,12 +68,12 @@ class DictDatabase(database.Database):
 
     def cursor(self, index=None):
         if index is not None and index not in self._indexes:
-            raise ValueError('Index {} does not exist'.format(index))
-        if not index:
-            return DictCursor(self._data.copy())
-
-        return DictIndexCursor(self._indexes[index][0].copy(),
-                               self._data.copy())
+            raise ValueError(f'Index {index} does not exist')
+        return (
+            DictIndexCursor(self._indexes[index][0].copy(), self._data.copy())
+            if index
+            else DictCursor(self._data.copy())
+        )
 
     def close(self):
         pass
@@ -116,9 +110,7 @@ class DictDatabase(database.Database):
         return len(self._data)
 
     def __str__(self):
-        out = []
-        for key, value in self._data.items():
-            out.append('{}: {}'.format(key, str(value)))
+        out = [f'{key}: {str(value)}' for key, value in self._data.items()]
         return ','.join(out)
 
 
@@ -150,7 +142,7 @@ class DictCursor(database.Cursor):
                 self._position = i
                 return
 
-        raise ValueError("Unknown key: {}".format(key))
+        raise ValueError(f"Unknown key: {key}")
 
     def key(self):
         if self._position >= 0 and self._position < len(self._data):
@@ -192,13 +184,13 @@ class DictIndexCursor(database.Cursor):
         self._position = -1
 
     def iter(self):
-        if not (self._position >= 0 and self._position < len(self._index)):
+        if self._position < 0 or self._position >= len(self._index):
             self.first()
         return DictIndexCursor._wrap_iter(
             self._index, self._position, self._data)
 
     def iter_rev(self):
-        if not (self._position >= 0 and self._position < len(self._index)):
+        if self._position < 0 or self._position >= len(self._index):
             self.last()
         return DictIndexCursor._wrap_iter(
             self._index, self._position, self._data, reverse=True)
@@ -232,6 +224,9 @@ class DictIndexCursor(database.Cursor):
 
     @staticmethod
     def _wrap_iter(index, start, data, reverse=False):
+
+
+
         class _WrapperIter:
             def __init__(self):
                 self._pos = start
@@ -240,12 +235,13 @@ class DictIndexCursor(database.Cursor):
                 return self
 
             def __next__(self):
-                if not (self._pos >= 0 and self._pos < len(index)):
+                if self._pos < 0 or self._pos >= len(index):
                     raise StopIteration()
 
                 val = data[index[self._pos][1]]
                 self._pos += (-1 if reverse else 1)
 
                 return val
+
 
         return _WrapperIter()

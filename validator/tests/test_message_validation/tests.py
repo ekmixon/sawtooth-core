@@ -56,14 +56,14 @@ class TestMessageValidation(unittest.TestCase):
         for _ in range(count):
             payload = {
                 'Verb': 'set',
-                'Name': 'name' + str(random.randint(0, 100)),
-                'Value': random.randint(0, 100)
+                'Name': f'name{random.randint(0, 100)}',
+                'Value': random.randint(0, 100),
             }
-            intkey_prefix = \
-                hashlib.sha512('intkey'.encode('utf-8')).hexdigest()[0:6]
+
+            intkey_prefix = hashlib.sha512('intkey'.encode('utf-8')).hexdigest()[:6]
 
             addr = intkey_prefix + \
-                hashlib.sha512(payload["Name"].encode('utf-8')).hexdigest()
+                    hashlib.sha512(payload["Name"].encode('utf-8')).hexdigest()
 
             payload_encode = hashlib.sha512(cbor.dumps(payload)).hexdigest()
 
@@ -76,11 +76,7 @@ class TestMessageValidation(unittest.TestCase):
                 dependencies=[],
                 payload_sha512=payload_encode)
 
-            if valid_batcher:
-                header.batcher_public_key = self.public_key
-            else:
-                header.batcher_public_key = "bad_batcher"
-
+            header.batcher_public_key = self.public_key if valid_batcher else "bad_batcher"
             header_bytes = header.SerializeToString()
 
             if valid_signature:
@@ -101,9 +97,11 @@ class TestMessageValidation(unittest.TestCase):
         return txn_list
 
     def _generate_id(self):
-        return hashlib.sha512(''.join(
-            [random.choice(string.ascii_letters)
-                for _ in range(0, 1024)]).encode()).hexdigest()
+        return hashlib.sha512(
+            ''.join(
+                [random.choice(string.ascii_letters) for _ in range(1024)]
+            ).encode()
+        ).hexdigest()
 
     def _create_batches(self, batch_count, txn_count,
                         valid_batch=True, valid_txn=True,
@@ -123,11 +121,7 @@ class TestMessageValidation(unittest.TestCase):
 
             header_bytes = batch_header.SerializeToString()
 
-            if valid_batch:
-                signature = self.signer.sign(header_bytes)
-            else:
-                signature = "bad_signature"
-
+            signature = self.signer.sign(header_bytes) if valid_batch else "bad_signature"
             batch = Batch(
                 header=header_bytes,
                 transactions=txn_list,
@@ -151,11 +145,7 @@ class TestMessageValidation(unittest.TestCase):
 
             header_bytes = block_header.SerializeToString()
 
-            if valid_block:
-                signature = self.signer.sign(header_bytes)
-            else:
-                signature = "bad_signature"
-
+            signature = self.signer.sign(header_bytes) if valid_block else "bad_signature"
             block = Block(header=header_bytes,
                           batches=batch_list,
                           header_signature=signature)
@@ -181,12 +171,9 @@ class TestMessageValidation(unittest.TestCase):
         else:
             signature = b"bad_signature"
 
-        message = ConsensusPeerMessage(
-            header=header_bytes,
-            content=content,
-            header_signature=signature)
-
-        return message
+        return ConsensusPeerMessage(
+            header=header_bytes, content=content, header_signature=signature
+        )
 
     def test_valid_transaction(self):
         txn_list = self._create_transactions(1)

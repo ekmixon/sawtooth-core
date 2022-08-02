@@ -36,7 +36,7 @@ class RestClient:
         self.namespace = namespace
 
     def get_leaf(self, address, head=None):
-        query = self._get('/state/' + address, head=head)
+        query = self._get(f'/state/{address}', head=head)
         return b64decode(query['data'])
 
     def list_state(self, namespace=None, head=None):
@@ -65,8 +65,7 @@ class RestClient:
             dict: the json result data, as a dict
         """
         submit_response = self._post('/batches', batch_list)
-        return self._submit_request("{}&wait={}".format(
-            submit_response['link'], WAIT))
+        return self._submit_request(f"{submit_response['link']}&wait={WAIT}")
 
     def block_list(self):
         return self._get('/blocks')
@@ -111,7 +110,7 @@ class RestClient:
         if code in (200, 201, 202):
             return json_result
 
-        raise Exception("({}): {}".format(code, json_result))
+        raise Exception(f"({code}): {json_result}")
 
     def _submit_request(self, url, params=None, data=None,
                         headers=None, method="GET"):
@@ -146,13 +145,13 @@ class RestClient:
             raise Exception(excp) from excp
         except requests.exceptions.ConnectionError as excp:
             raise Exception(
-                ('Unable to connect to "{}": '
-                 'make sure URL is correct').format(self.url)) from excp
+                f'Unable to connect to "{self.url}": make sure URL is correct'
+            ) from excp
 
     @staticmethod
     def _format_queries(queries):
         queries = {k: v for k, v in queries.items() if v is not None}
-        return queries if queries else ''
+        return queries or ''
 
 
 class XoClient(RestClient):
@@ -171,7 +170,7 @@ class XoClient(RestClient):
         }
 
     def make_xo_address(self, name):
-        return self.namespace + hashlib.sha512(name.encode()).hexdigest()[0:64]
+        return self.namespace + hashlib.sha512(name.encode()).hexdigest()[:64]
 
     def get_game(self, name):
         return self.decode_data(
@@ -211,12 +210,10 @@ def wait_for_rest_apis(endpoints):
     Args:
         endpoints (list of str): A list of host:port strings.
     """
+    http = 'http://'
     for endpoint in endpoints:
-        http = 'http://'
         url = endpoint if endpoint.startswith(http) else http + endpoint
-        wait_until_status(
-            '{}/blocks'.format(url),
-            status_code=200)
+        wait_until_status(f'{url}/blocks', status_code=200)
 
 
 class SetSawtoothHome:

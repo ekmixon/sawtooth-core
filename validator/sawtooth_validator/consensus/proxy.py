@@ -330,9 +330,7 @@ class ConsensusProxy:
             # an address prefix
             leaves = state_view.leaves(address)
 
-            for leaf in leaves:
-                result.append(leaf)
-
+            result.extend(iter(leaves))
         return result
 
     def _get_blocks(self, block_ids):
@@ -354,12 +352,9 @@ class ConsensusProxy:
         ).SerializeToString()
 
         signature = bytes.fromhex(self._identity_signer.sign(header))
-        message = ConsensusPeerMessage(
-            header=header,
-            content=content,
-            header_signature=signature)
-
-        return message
+        return ConsensusPeerMessage(
+            header=header, content=content, header_signature=signature
+        )
 
 
 def get_configured_engine(block, settings_view_factory):
@@ -377,18 +372,10 @@ def get_configured_engine(block, settings_view_factory):
     # - Use sawtooth.consensus.algorithm if sawtooth.consensus.algorithm.name
     #   is unset
     # - Use "Devmode" if sawtooth.consensus.algorithm is unset
-    if conf_version is not None:
-        version = conf_version
-    else:
-        version = "0.1"
-
+    version = conf_version if conf_version is not None else "0.1"
     if conf_name is not None:
         name = conf_name
     else:
         algorithm = settings_view.get_setting('sawtooth.consensus.algorithm')
-        if algorithm is not None:
-            name = algorithm
-        else:
-            name = "Devmode"
-
+        name = algorithm if algorithm is not None else "Devmode"
     return name, version

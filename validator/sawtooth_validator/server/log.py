@@ -77,19 +77,19 @@ def log_configuration(log_config=None, log_dir=None, name=None):
     else:
         try:
             log_filename = os.path.join(log_dir, name)
-            debug_handler = logging.FileHandler(log_filename + "-debug.log")
+            debug_handler = logging.FileHandler(f"{log_filename}-debug.log")
             debug_handler.setFormatter(logging.Formatter(
                 '[%(asctime)s.%(msecs)03d [%(threadName)s] %(module)s'
                 ' %(levelname)s] %(message)s', "%H:%M:%S"))
             debug_handler.setLevel(logging.DEBUG)
 
-            error_handler = logging.FileHandler(log_filename + "-error.log")
+            error_handler = logging.FileHandler(f"{log_filename}-error.log")
             error_handler.setFormatter(logging.Formatter(
                 '[%(asctime)s.%(msecs)03d [%(threadName)s] %(module)s'
                 ' %(levelname)s] %(message)s', "%H:%M:%S"))
             error_handler.setLevel(logging.ERROR)
         except IOError as e:
-            raise LocalConfigurationError("Error: {}".format(str(e))) from e
+            raise LocalConfigurationError(f"Error: {str(e)}") from e
 
         logging.getLogger().addHandler(error_handler)
         logging.getLogger().addHandler(debug_handler)

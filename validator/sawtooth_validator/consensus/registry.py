@@ -59,10 +59,14 @@ class ConsensusRegistry:
                 return eng.name == name and eng.version == version
 
             def is_replaced(eng):
-                return (
-                    engine_handles_protocol(eng.name, eng.version, engine_info)
-                    and all([True for (n, v) in eng.additional_protocols
-                             if engine_handles_protocol(n, v, engine_info)]))
+                return engine_handles_protocol(
+                    eng.name, eng.version, engine_info
+                ) and all(
+                    True
+                    for (n, v) in eng.additional_protocols
+                    if engine_handles_protocol(n, v, engine_info)
+                )
+
 
             self._registry = list(filter(
                 lambda e: not is_same_engine(e) and not is_replaced(e),

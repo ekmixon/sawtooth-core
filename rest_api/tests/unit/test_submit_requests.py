@@ -64,8 +64,7 @@ class PostBatchTests(BaseApiTest):
 
         response = await request.json()
         self.assertNotIn('data', response)
-        self.assert_has_valid_link(
-            response, '/batch_statuses?id={}'.format(ID_A))
+        self.assert_has_valid_link(response, f'/batch_statuses?id={ID_A}')
 
     @unittest_run_loop
     async def test_post_batch_with_validator_error(self):
@@ -150,7 +149,8 @@ class PostBatchTests(BaseApiTest):
         response = await request.json()
         self.assertNotIn('data', response)
         self.assert_has_valid_link(
-            response, '/batch_statuses?id={},{},{}'.format(ID_A, ID_B, ID_C))
+            response, f'/batch_statuses?id={ID_A},{ID_B},{ID_C}'
+        )
 
     @unittest_run_loop
     async def test_post_no_batches(self):
@@ -218,12 +218,10 @@ class ClientBatchStatusTests(BaseApiTest):
             batch_id=ID_D, status=ClientBatchStatus.PENDING)]
         self.connection.preset_response(batch_statuses=statuses)
 
-        response = await self.get_assert_200(
-            '/batch_statuses?id={}'.format(ID_D))
+        response = await self.get_assert_200(f'/batch_statuses?id={ID_D}')
         self.connection.assert_valid_request_sent(batch_ids=[ID_D])
 
-        self.assert_has_valid_link(
-            response, '/batch_statuses?id={}'.format(ID_D))
+        self.assert_has_valid_link(response, f'/batch_statuses?id={ID_D}')
         self.assert_statuses_match(statuses, response['data'])
 
     @unittest_run_loop
@@ -258,12 +256,10 @@ class ClientBatchStatusTests(BaseApiTest):
         ]
         self.connection.preset_response(batch_statuses=statuses)
 
-        response = await self.get_assert_200(
-            '/batch_statuses?id={}'.format(ID_D))
+        response = await self.get_assert_200(f'/batch_statuses?id={ID_D}')
         self.connection.assert_valid_request_sent(batch_ids=[ID_D])
 
-        self.assert_has_valid_link(
-            response, '/batch_statuses?id={}'.format(ID_D))
+        self.assert_has_valid_link(response, f'/batch_statuses?id={ID_D}')
         self.assert_statuses_match(statuses, response['data'])
 
     @unittest_run_loop
@@ -279,8 +275,7 @@ class ClientBatchStatusTests(BaseApiTest):
             - an error property with a code of 10
         """
         self.connection.preset_response(self.status.INTERNAL_ERROR)
-        response = await self.get_assert_status(
-            '/batch_statuses?id={}'.format(ID_D), 500)
+        response = await self.get_assert_status(f'/batch_statuses?id={ID_D}', 500)
 
         self.assert_has_valid_error(response, 10)
 
@@ -296,8 +291,7 @@ class ClientBatchStatusTests(BaseApiTest):
             - an error property with a code of 27
         """
         self.connection.preset_response(self.status.NO_RESOURCE)
-        response = await self.get_assert_status(
-            '/batch_statuses?id={}'.format(ID_D), 500)
+        response = await self.get_assert_status(f'/batch_statuses?id={ID_D}', 500)
 
         self.assert_has_valid_error(response, 27)
 
@@ -325,15 +319,13 @@ class ClientBatchStatusTests(BaseApiTest):
         ]
         self.connection.preset_response(batch_statuses=statuses)
 
-        response = await self.get_assert_200(
-            '/batch_statuses?id={}&wait'.format(ID_D))
+        response = await self.get_assert_200(f'/batch_statuses?id={ID_D}&wait')
         self.connection.assert_valid_request_sent(
             batch_ids=[ID_D],
             wait=True,
             timeout=4)
 
-        self.assert_has_valid_link(
-            response, '/batch_statuses?id={}&wait'.format(ID_D))
+        self.assert_has_valid_link(response, f'/batch_statuses?id={ID_D}&wait')
         self.assert_statuses_match(statuses, response['data'])
 
     @unittest_run_loop
@@ -365,13 +357,16 @@ class ClientBatchStatusTests(BaseApiTest):
         self.connection.preset_response(batch_statuses=statuses)
 
         response = await self.get_assert_200(
-            '/batch_statuses?id={},{},{}'.format(ID_A, ID_B, ID_C))
+            f'/batch_statuses?id={ID_A},{ID_B},{ID_C}'
+        )
+
         self.connection.assert_valid_request_sent(
             batch_ids=[ID_A, ID_B, ID_C])
 
         self.assert_has_valid_link(
-            response,
-            '/batch_statuses?id={},{},{}'.format(ID_A, ID_B, ID_C))
+            response, f'/batch_statuses?id={ID_A},{ID_B},{ID_C}'
+        )
+
         self.assert_statuses_match(statuses, response['data'])
 
     @unittest_run_loop

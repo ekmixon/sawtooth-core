@@ -83,14 +83,14 @@ class TestCompleter(unittest.TestCase):
         for _ in range(count):
             payload = {
                 'Verb': 'set',
-                'Name': 'name' + str(random.randint(0, 100)),
-                'Value': random.randint(0, 100)
+                'Name': f'name{random.randint(0, 100)}',
+                'Value': random.randint(0, 100),
             }
-            intkey_prefix = \
-                hashlib.sha512('intkey'.encode('utf-8')).hexdigest()[0:6]
+
+            intkey_prefix = hashlib.sha512('intkey'.encode('utf-8')).hexdigest()[:6]
 
             addr = intkey_prefix + \
-                hashlib.sha512(payload["Name"].encode('utf-8')).hexdigest()
+                    hashlib.sha512(payload["Name"].encode('utf-8')).hexdigest()
 
             payload_encode = hashlib.sha512(cbor.dumps(payload)).hexdigest()
 
@@ -155,7 +155,7 @@ class TestCompleter(unittest.TestCase):
                        find_batch=True):
         block_list = []
 
-        for i in range(0, block_count):
+        for i in range(block_count):
             batch_list = self._create_batches(batch_count, 2)
             batch_ids = [batch.header_signature for batch in batch_list]
 

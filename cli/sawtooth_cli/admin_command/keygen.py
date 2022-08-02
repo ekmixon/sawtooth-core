@@ -41,9 +41,11 @@ def add_keygen_parser(subparsers, parent_parser):
     parser = subparsers.add_parser(
         'keygen',
         help=description,
-        description=description + '.',
+        description=f'{description}.',
         epilog=epilog,
-        parents=[parent_parser])
+        parents=[parent_parser],
+    )
+
 
     parser.add_argument(
         'key_name',
@@ -68,25 +70,21 @@ def do_keygen(args):
     Args:
         args (:obj:`Namespace`): The parsed args.
     """
-    if args.key_name is not None:
-        key_name = args.key_name
-    else:
-        key_name = 'validator'
-
+    key_name = args.key_name if args.key_name is not None else 'validator'
     key_dir = get_key_dir()
 
     if not os.path.exists(key_dir):
-        raise CliException("Key directory does not exist: {}".format(key_dir))
+        raise CliException(f"Key directory does not exist: {key_dir}")
 
-    priv_filename = os.path.join(key_dir, key_name + '.priv')
-    pub_filename = os.path.join(key_dir, key_name + '.pub')
+    priv_filename = os.path.join(key_dir, f'{key_name}.priv')
+    pub_filename = os.path.join(key_dir, f'{key_name}.pub')
 
     if not args.force:
         file_exists = False
         for filename in [priv_filename, pub_filename]:
             if os.path.exists(filename):
                 file_exists = True
-                print('file exists: {}'.format(filename), file=sys.stderr)
+                print(f'file exists: {filename}', file=sys.stderr)
         if file_exists:
             raise CliException(
                 'files exist, rerun with --force to overwrite existing files')
@@ -101,9 +99,9 @@ def do_keygen(args):
         with open(priv_filename, 'w') as priv_fd:
             if not args.quiet:
                 if priv_exists:
-                    print('overwriting file: {}'.format(priv_filename))
+                    print(f'overwriting file: {priv_filename}')
                 else:
-                    print('writing file: {}'.format(priv_filename))
+                    print(f'writing file: {priv_filename}')
             priv_fd.write(private_key.as_hex())
             priv_fd.write('\n')
             # Get the uid and gid of the key directory
@@ -119,9 +117,9 @@ def do_keygen(args):
         with open(pub_filename, 'w') as pub_fd:
             if not args.quiet:
                 if pub_exists:
-                    print('overwriting file: {}'.format(pub_filename))
+                    print(f'overwriting file: {pub_filename}')
                 else:
-                    print('writing file: {}'.format(pub_filename))
+                    print(f'writing file: {pub_filename}')
             pub_fd.write(public_key.as_hex())
             pub_fd.write('\n')
             # Set user and group on keys to the user/group of the key directory
@@ -130,4 +128,4 @@ def do_keygen(args):
             os.chmod(pub_filename, 0o644)
 
     except IOError as ioe:
-        raise CliException('IOError: {}'.format(str(ioe))) from ioe
+        raise CliException(f'IOError: {str(ioe)}') from ioe

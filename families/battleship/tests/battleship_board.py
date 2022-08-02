@@ -69,25 +69,25 @@ class BoardLayout:
             text = position.text
 
             if orientation == "horizontal":
-                for i in range(0, len(text)):
+                for i in range(len(text)):
                     if board[row][col + i] != "-":
                         raise BoardLayoutException(
-                            "can not place ship at {}{}, space "
-                            "is occupied with {}".format("ABCDEFGHIJ"[col], row, board[row][col])
+                            f'can not place ship at {"ABCDEFGHIJ"[col]}{row}, space is occupied with {board[row][col]}'
                         )
+
                     board[row][col + i] = text[i]
 
             elif orientation == "vertical":
-                for i in range(0, len(text)):
+                for i in range(len(text)):
                     if board[row + i][col] != "-":
                         raise BoardLayoutException(
-                            "can not place ship at {}{}, space "
-                            "is occupied with {}".format("ABCDEFGHIJ"[col], row, board[row][col])
+                            f'can not place ship at {"ABCDEFGHIJ"[col]}{row}, space is occupied with {board[row][col]}'
                         )
+
                     board[row + i][col] = text[i]
 
             else:
-                assert False, "invalid orientation: {}".format(orientation)
+                assert False, f"invalid orientation: {orientation}"
 
         return board
 
@@ -180,7 +180,7 @@ class ShipPosition:
 def create_nonces(board_size):
     return [
         [
-            "".join([random.choice(string.ascii_letters) for _ in range(0, 10)])
+            "".join([random.choice(string.ascii_letters) for _ in range(10)])
             for _ in range(board_size)
         ]
         for _ in range(board_size)

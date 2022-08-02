@@ -77,9 +77,7 @@ class TimerWrapper():
         self._noop = NoopTimerContext()
 
     def time(self):
-        if self._timer:
-            return self._timer.time()
-        return self._noop
+        return self._timer.time() if self._timer else self._noop
 
 
 class RouteHandler:
@@ -225,7 +223,7 @@ class RouteHandler:
 
         # Query validator
         validator_query = \
-            client_batch_submit_pb2.ClientBatchStatusRequest(
+                client_batch_submit_pb2.ClientBatchStatusRequest(
                 batch_ids=ids)
         self._set_wait(request, validator_query)
 
@@ -538,7 +536,7 @@ class RouteHandler:
 
         # Query validator
         validator_query = \
-            client_receipt_pb2.ClientReceiptGetRequest(
+                client_receipt_pb2.ClientReceiptGetRequest(
                 transaction_ids=ids)
         self._set_wait(request, validator_query)
 
@@ -844,20 +842,13 @@ class RouteHandler:
         returns an empty string.
         """
         forwarded = request.headers.get('Forwarded', '')
-        match = re.search(
-            r'(?<={}=).+?(?=[\s,;]|$)'.format(key),
-            forwarded,
-            re.IGNORECASE)
+        match = re.search(f'(?<={key}=).+?(?=[\s,;]|$)', forwarded, re.IGNORECASE)
 
         if match is not None:
-            header = match.group(0)
+            header = match[0]
 
-            if header[0] == '"' and header[-1] == '"':
-                return header[1:-1]
-
-            return header
-
-        return request.headers.get('X-Forwarded-{}'.format(key.title()), '')
+            return header[1:-1] if header[0] == '"' and header[-1] == '"' else header
+        return request.headers.get(f'X-Forwarded-{key.title()}', '')
 
     @classmethod
     def _expand_block(cls, block):
@@ -1048,4 +1039,4 @@ class RouteHandler:
         try:
             return proto.Status.Name(status_enum)
         except ValueError:
-            return 'Unknown ({})'.format(status_enum)
+            return f'Unknown ({status_enum})'

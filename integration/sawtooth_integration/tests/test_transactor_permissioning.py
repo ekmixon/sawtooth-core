@@ -38,7 +38,7 @@ class TestTransactorPermissioning(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         wait_for_rest_apis([REST_API])
-        cls.REST_ENDPOINT = "http://" + REST_API
+        cls.REST_ENDPOINT = f"http://{REST_API}"
 
     def setUp(self):
 
@@ -277,7 +277,7 @@ def make_intkey_address(unique_value):
 
 
 def make_xo_payload(unique_value):
-    return "{},{},{}".format(unique_value, 'create', '').encode('utf-8')
+    return f"{unique_value},create,".encode('utf-8')
 
 
 def xo_encode(contents):
@@ -312,14 +312,17 @@ class Transactor:
         """
 
         self.name = name
-        self._rest_endpoint = rest_endpoint \
-            if rest_endpoint.startswith("http://") \
-            else "http://{}".format(rest_endpoint)
-        with open('/root/.sawtooth/keys/{}.priv'.format(name)) as priv_file:
+        self._rest_endpoint = (
+            rest_endpoint
+            if rest_endpoint.startswith("http://")
+            else f"http://{rest_endpoint}"
+        )
+
+        with open(f'/root/.sawtooth/keys/{name}.priv') as priv_file:
             private_key = Secp256k1PrivateKey.from_hex(
                 priv_file.read().strip('\n'))
         self._signer = CryptoFactory(create_context('secp256k1')) \
-            .new_signer(private_key)
+                .new_signer(private_key)
         self._factories = {}
         self._client = RestClient(url=self._rest_endpoint)
 
@@ -370,30 +373,54 @@ class Transactor:
             transactions=transactions)
 
     def send(self, family_name, transactions=None):
-        if not transactions:
-            batch_list = self.create_batch(family_name)
-        else:
-            batch_list = self.batch_transactions(
-                family_name=family_name,
-                transactions=transactions)
+        batch_list = (
+            self.batch_transactions(
+                family_name=family_name, transactions=transactions
+            )
+            if transactions
+            else self.create_batch(family_name)
+        )
 
         self._client.send_batches(batch_list=batch_list)
 
     def set_public_key_for_role(self, policy, role, permit_keys, deny_keys):
-        permits = ["PERMIT_KEY {}".format(key) for key in permit_keys]
-        denies = ["DENY_KEY {}".format(key) for key in deny_keys]
+        permits = [f"PERMIT_KEY {key}" for key in permit_keys]
+        denies = [f"DENY_KEY {key}" for key in deny_keys]
         self._run_identity_commands(policy, role, denies + permits)
 
     def _run_identity_commands(self, policy, role, rules):
         subprocess.run(
-            ['sawtooth', 'identity', 'policy', 'create',
-             '-k', '/root/.sawtooth/keys/{}.priv'.format(self.name),
-             '--wait', '15',
-             '--url', self._rest_endpoint, policy, *rules],
-            check=True)
+            [
+                'sawtooth',
+                'identity',
+                'policy',
+                'create',
+                '-k',
+                f'/root/.sawtooth/keys/{self.name}.priv',
+                '--wait',
+                '15',
+                '--url',
+                self._rest_endpoint,
+                policy,
+                *rules,
+            ],
+            check=True,
+        )
+
         subprocess.run(
-            ['sawtooth', 'identity', 'role', 'create',
-             '-k', '/root/.sawtooth/keys/{}.priv'.format(self.name),
-             '--wait', '15',
-             '--url', self._rest_endpoint, role, policy],
-            check=True)
+            [
+                'sawtooth',
+                'identity',
+                'role',
+                'create',
+                '-k',
+                f'/root/.sawtooth/keys/{self.name}.priv',
+                '--wait',
+                '15',
+                '--url',
+                self._rest_endpoint,
+                role,
+                policy,
+            ],
+            check=True,
+        )

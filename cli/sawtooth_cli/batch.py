@@ -171,7 +171,7 @@ def do_batch_list(args):
     elif args.format == 'csv':
         fmt.print_csv(headers, batches, parse_batch_row)
 
-    elif args.format == 'json' or args.format == 'yaml':
+    elif args.format in ['json', 'yaml']:
         data = [dict(zip(keys, parse_batch_row(b))) for b in batches]
 
         if args.format == 'yaml':
@@ -195,15 +195,14 @@ def do_batch_show(args):
         elif args.key in output['header']:
             output = output['header'][args.key]
         else:
-            raise CliException(
-                'key "{}" not found in batch or header'.format(args.key))
+            raise CliException(f'key "{args.key}" not found in batch or header')
 
     if args.format == 'yaml':
         fmt.print_yaml(output)
     elif args.format == 'json':
         fmt.print_json(output)
     else:
-        raise AssertionError('Missing handler: {}'.format(args.format))
+        raise AssertionError(f'Missing handler: {args.format}')
 
 
 def do_batch_status(args):
@@ -225,7 +224,7 @@ def do_batch_status(args):
     elif args.format == 'json':
         fmt.print_json(statuses)
     else:
-        raise AssertionError('Missing handler: {}'.format(args.format))
+        raise AssertionError(f'Missing handler: {args.format}')
 
 
 def _split_batch_list(args, batch_list):
@@ -257,9 +256,10 @@ def do_batch_submit(args):
 
     stop = time.time()
 
-    print('batches: {},  batch/sec: {}'.format(
-        str(len(batches.batches)),
-        len(batches.batches) / (stop - start)))
+    print(
+        f'batches: {len(batches.batches)},  batch/sec: {len(batches.batches) / (stop - start)}'
+    )
+
 
     if args.wait and args.wait > 0:
         batch_ids = [b.header_signature for b in batches.batches]
@@ -267,9 +267,7 @@ def do_batch_submit(args):
         start_time = time.time()
 
         while wait_time < args.wait:
-            statuses = rest_client.get_statuses(
-                batch_ids,
-                args.wait - int(wait_time))
+            statuses = rest_client.get_statuses(batch_ids, args.wait - wait_time)
             wait_time = time.time() - start_time
 
             if all(s['status'] == 'COMMITTED' for s in statuses):
@@ -281,5 +279,5 @@ def do_batch_submit(args):
 
         print('Wait timed out! Some batches have not yet been committed...')
         for batch_id, status in statuses[0].items():
-            print('{}  {}'.format(batch_id, status))
+            print(f'{batch_id}  {status}')
         sys.exit(1)

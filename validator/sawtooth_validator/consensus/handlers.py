@@ -117,7 +117,7 @@ class ConsensusRegisterHandler(ConsensusServiceHandler):
     def handle_request(self, request, response, connection_id):
         if request.additional_protocols is not None:
             additional_protocols = \
-                [(p.name, p.version) for p in request.additional_protocols]
+                    [(p.name, p.version) for p in request.additional_protocols]
         else:
             additional_protocols = []
 
@@ -156,7 +156,7 @@ class ConsensusRegisterActivateHandler(Handler):
 
         if request.additional_protocols is not None:
             additional_protocols = \
-                [(p.name, p.version) for p in request.additional_protocols]
+                    [(p.name, p.version) for p in request.additional_protocols]
         else:
             additional_protocols = []
 
@@ -378,11 +378,6 @@ class ConsensusCheckBlocksNotifier(Handler):
                 self._proxy.validate_block(block_id)
             elif block_status == BlockStatus.Missing:
                 LOGGER.error("Missing block: %s", block_id)
-            elif block_status == BlockStatus.InValidation:
-                # Block is already being validated, notification will be sent
-                # when it's complete
-                pass
-
         return HandlerResult(status=HandlerStatus.PASS)
 
 

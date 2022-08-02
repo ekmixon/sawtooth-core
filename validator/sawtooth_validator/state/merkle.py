@@ -190,11 +190,7 @@ class MerkleDatabase(ffi.OwnedPointer):
             string_ptr, string_len, string_cap).decode()
 
     def addresses(self):
-        addresses = []
-        for address, _ in self:
-            addresses.append(address)
-
-        return addresses
+        return [address for address, _ in self]
 
     def leaves(self, prefix=None):
         """Returns an iterator which returns tuples of (address, data) values
@@ -232,7 +228,7 @@ def _libexec(name, *args):
     if res == ErrorCode.Unknown:
         raise ValueError("An unknown error occurred")
 
-    raise ValueError("An unknown error occurred: {}".format(res))
+    raise ValueError(f"An unknown error occurred: {res}")
 
 
 class _LeafIterator:

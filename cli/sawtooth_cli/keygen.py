@@ -57,34 +57,30 @@ def add_keygen_parser(subparsers, parent_parser):
 
 
 def do_keygen(args):
-    if args.key_name is not None:
-        key_name = args.key_name
-    else:
-        key_name = getpass.getuser()
-
+    key_name = args.key_name if args.key_name is not None else getpass.getuser()
     if args.key_dir is not None:
         key_dir = args.key_dir
         if not os.path.exists(key_dir):
-            raise CliException('no such directory: {}'.format(key_dir))
+            raise CliException(f'no such directory: {key_dir}')
     else:
         key_dir = os.path.join(os.path.expanduser('~'), '.sawtooth', 'keys')
         if not os.path.exists(key_dir):
             if not args.quiet:
-                print('creating key directory: {}'.format(key_dir))
+                print(f'creating key directory: {key_dir}')
             try:
                 os.makedirs(key_dir, 0o755)
             except IOError as e:
-                raise CliException('IOError: {}'.format(str(e))) from e
+                raise CliException(f'IOError: {str(e)}') from e
 
-    priv_filename = os.path.join(key_dir, key_name + '.priv')
-    pub_filename = os.path.join(key_dir, key_name + '.pub')
+    priv_filename = os.path.join(key_dir, f'{key_name}.priv')
+    pub_filename = os.path.join(key_dir, f'{key_name}.pub')
 
     if not args.force:
         file_exists = False
         for filename in [priv_filename, pub_filename]:
             if os.path.exists(filename):
                 file_exists = True
-                print('file exists: {}'.format(filename), file=sys.stderr)
+                print(f'file exists: {filename}', file=sys.stderr)
         if file_exists:
             raise CliException(
                 'files exist, rerun with --force to overwrite existing files')
@@ -98,9 +94,9 @@ def do_keygen(args):
         with open(priv_filename, 'w') as priv_fd:
             if not args.quiet:
                 if priv_exists:
-                    print('overwriting file: {}'.format(priv_filename))
+                    print(f'overwriting file: {priv_filename}')
                 else:
-                    print('writing file: {}'.format(priv_filename))
+                    print(f'writing file: {priv_filename}')
             priv_fd.write(private_key.as_hex())
             priv_fd.write('\n')
             # Set the private key u+rw g+r
@@ -110,13 +106,13 @@ def do_keygen(args):
         with open(pub_filename, 'w') as pub_fd:
             if not args.quiet:
                 if pub_exists:
-                    print('overwriting file: {}'.format(pub_filename))
+                    print(f'overwriting file: {pub_filename}')
                 else:
-                    print('writing file: {}'.format(pub_filename))
+                    print(f'writing file: {pub_filename}')
             pub_fd.write(public_key.as_hex())
             pub_fd.write('\n')
             # Set the public key u+rw g+r o+r
             os.chmod(pub_filename, 0o644)
 
     except IOError as ioe:
-        raise CliException('IOError: {}'.format(str(ioe))) from ioe
+        raise CliException(f'IOError: {str(ioe)}') from ioe

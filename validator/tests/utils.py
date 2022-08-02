@@ -28,10 +28,7 @@ class TimeOut:
 
 
 def wait_until(lbd, time_out=None):
-    end_time = None
-    if time_out is not None:
-        end_time = time.time() + time_out
-
+    end_time = time.time() + time_out if time_out is not None else None
     while (end_time is None
            or time.time() < end_time) and \
             not lbd():

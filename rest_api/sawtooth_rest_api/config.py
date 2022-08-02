@@ -49,19 +49,29 @@ def load_toml_rest_api_config(filename):
             raw_config = fd.read()
     except IOError as e:
         raise RestApiConfigurationError(
-            "Unable to load rest api configuration file: {}".format(
-                str(e))) from e
+            f"Unable to load rest api configuration file: {str(e)}"
+        ) from e
+
 
     toml_config = toml.loads(raw_config)
 
-    invalid_keys = set(toml_config.keys()).difference(
-        ['bind', 'connect', 'timeout', 'opentsdb_db', 'opentsdb_url',
-         'opentsdb_username', 'opentsdb_password', 'client_max_size'])
-    if invalid_keys:
+    if invalid_keys := set(toml_config.keys()).difference(
+        [
+            'bind',
+            'connect',
+            'timeout',
+            'opentsdb_db',
+            'opentsdb_url',
+            'opentsdb_username',
+            'opentsdb_password',
+            'client_max_size',
+        ]
+    ):
         raise RestApiConfigurationError(
-            "Invalid keys in rest api config: {}".format(
-                ", ".join(sorted(list(invalid_keys)))))
-    config = RestApiConfig(
+            f'Invalid keys in rest api config: {", ".join(sorted(list(invalid_keys)))}'
+        )
+
+    return RestApiConfig(
         bind=toml_config.get("bind", None),
         connect=toml_config.get('connect', None),
         timeout=toml_config.get('timeout', None),
@@ -69,10 +79,8 @@ def load_toml_rest_api_config(filename):
         opentsdb_db=toml_config.get('opentsdb_db', None),
         opentsdb_username=toml_config.get('opentsdb_username', None),
         opentsdb_password=toml_config.get('opentsdb_password', None),
-        client_max_size=toml_config.get('client_max_size', None)
+        client_max_size=toml_config.get('client_max_size', None),
     )
-
-    return config
 
 
 def merge_rest_api_config(configs):
@@ -172,19 +180,7 @@ class RestApiConfig:
 
     def __repr__(self):
         # skip opentsdb_db password
-        return \
-            "{}(bind={}, connect={}, timeout={}," \
-            "opentsdb_url={}, opentsdb_db={}, opentsdb_username={}," \
-            "client_max_size={})" \
-            .format(
-                self.__class__.__name__,
-                repr(self._bind),
-                repr(self._connect),
-                repr(self._timeout),
-                repr(self._opentsdb_url),
-                repr(self._opentsdb_db),
-                repr(self._opentsdb_username),
-                repr(self._client_max_size))
+        return f"{self.__class__.__name__}(bind={repr(self._bind)}, connect={repr(self._connect)}, timeout={repr(self._timeout)},opentsdb_url={repr(self._opentsdb_url)}, opentsdb_db={repr(self._opentsdb_db)}, opentsdb_username={repr(self._opentsdb_username)},client_max_size={repr(self._client_max_size)})"
 
     def to_dict(self):
         return collections.OrderedDict([

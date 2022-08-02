@@ -57,10 +57,7 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None,
     args = parser.parse_args(args)
 
     if with_loggers is True:
-        if args.verbose is None:
-            verbose_level = 0
-        else:
-            verbose_level = args.verbose
+        verbose_level = 0 if args.verbose is None else args.verbose
         setup_loggers(verbose_level=verbose_level)
 
     if args.subcommand == 'genesis':
@@ -68,7 +65,7 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None,
     elif args.subcommand == 'keygen':
         do_keygen(args)
     else:
-        raise CliException('Invalid command: {}'.format(args.subcommand))
+        raise CliException(f'Invalid command: {args.subcommand}')
 
 
 def main_wrapper():
@@ -76,7 +73,7 @@ def main_wrapper():
     try:
         main()
     except CliException as e:
-        print("Error: {}".format(e), file=sys.stderr)
+        print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:
         pass

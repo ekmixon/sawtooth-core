@@ -67,10 +67,10 @@ class ReceiptGetRequestTests(BaseApiTest):
             receipts=receipts,
             status=self.status.OK)
 
-        response = await self.get_assert_200('/receipts?id={}'.format(ID_B))
+        response = await self.get_assert_200(f'/receipts?id={ID_B}')
         self.connection.assert_valid_request_sent(transaction_ids=[ID_B])
 
-        self.assert_has_valid_link(response, '/receipts?id={}'.format(ID_B))
+        self.assert_has_valid_link(response, f'/receipts?id={ID_B}')
         self.assert_receipts_match(receipts, response['data'])
 
     @unittest_run_loop
@@ -93,8 +93,7 @@ class ReceiptGetRequestTests(BaseApiTest):
             receipts=receipts,
             status=self.status.NO_RESOURCE)
 
-        response = await self.get_assert_status('/receipts?id={}'.format(ID_D),
-                                                404)
+        response = await self.get_assert_status(f'/receipts?id={ID_D}', 404)
         self.connection.assert_valid_request_sent(transaction_ids=[ID_D])
 
         self.assert_has_valid_error(response, 80)
@@ -125,14 +124,11 @@ class ReceiptGetRequestTests(BaseApiTest):
             status=self.status.OK,
             receipts=receipts)
 
-        response = await self.get_assert_200(
-            '/receipts?id={},{},{}'.format(ID_B, ID_C, ID_D))
+        response = await self.get_assert_200(f'/receipts?id={ID_B},{ID_C},{ID_D}')
         self.connection.assert_valid_request_sent(
             transaction_ids=[ID_B, ID_C, ID_D])
 
-        self.assert_has_valid_link(
-            response,
-            '/receipts?id={},{},{}'.format(ID_B, ID_C, ID_D))
+        self.assert_has_valid_link(response, f'/receipts?id={ID_B},{ID_C},{ID_D}')
         self.assert_receipts_match(receipts, response['data'])
 
     @unittest_run_loop

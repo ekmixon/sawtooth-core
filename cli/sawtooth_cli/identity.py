@@ -239,8 +239,8 @@ def do_identity(args):
         _do_identity_role_list(args)
     else:
         raise AssertionError(
-            '"{}" is not a valid subcommand of "identity"'.format(
-                args.subcommand))
+            f'"{args.subcommand}" is not a valid subcommand of "identity"'
+        )
 
 
 def _do_identity_policy_create(args):
@@ -262,8 +262,7 @@ def _do_identity_policy_create(args):
             with open(args.output, 'wb') as batch_file:
                 batch_file.write(batch_list.SerializeToString())
         except IOError as e:
-            raise CliException(
-                'Unable to write to batch file: {}'.format(str(e))) from e
+            raise CliException(f'Unable to write to batch file: {str(e)}') from e
     elif args.url is not None:
         rest_client = RestClient(args.url)
         rest_client.send_batches(batch_list)
@@ -273,9 +272,7 @@ def _do_identity_policy_create(args):
             start_time = time.time()
 
             while wait_time < args.wait:
-                statuses = rest_client.get_statuses(
-                    [batch_id],
-                    args.wait - int(wait_time))
+                statuses = rest_client.get_statuses([batch_id], args.wait - wait_time)
                 wait_time = time.time() - start_time
                 if statuses[0]['status'] == 'COMMITTED':
                     print(
@@ -306,9 +303,7 @@ def _do_identity_policy_list(args):
         decoded = b64decode(state_value['data'])
         policies_list.ParseFromString(decoded)
 
-        for policy in policies_list.policies:
-            printable_policies.append(policy)
-
+        printable_policies.extend(iter(policies_list.policies))
     printable_policies.sort(key=lambda p: p.name)
 
     if args.format == 'default':
@@ -321,30 +316,34 @@ def _do_identity_policy_list(args):
             for entry in policy.entries:
                 entry_string = (" " * 4) + Policy.EntryType.Name(entry.type) \
                     + " " + entry.key
-                value += (entry_string[:width] + '...'
-                          if len(entry_string) > width
-                          else entry_string) + "\n"
-            print('{}: \n  {}'.format(policy.name, value))
+                value += (
+                    f'{entry_string[:width]}...'
+                    if len(entry_string) > width
+                    else entry_string
+                ) + "\n"
+
+            print(f'{policy.name}: \n  {value}')
     elif args.format == 'csv':
         try:
             writer = csv.writer(sys.stdout, quoting=csv.QUOTE_ALL)
             writer.writerow(['POLICY NAME', 'ENTRIES'])
             for policy in printable_policies:
                 output = [policy.name]
-                for entry in policy.entries:
-                    output.append(
-                        Policy.EntryType.Name(entry.type) + " " + entry.key)
+                output.extend(
+                    f"{Policy.EntryType.Name(entry.type)} {entry.key}"
+                    for entry in policy.entries
+                )
+
                 writer.writerow(output)
         except csv.Error:
             raise CliException('Error writing CSV') from CliException
-    elif args.format == 'json' or args.format == 'yaml':
+    elif args.format in ['json', 'yaml']:
         output = {}
         for policy in printable_policies:
             value = "Entries: "
             for entry in policy.entries:
-                entry_string = Policy.EntryType.Name(entry.type) + " " \
-                    + entry.key
-                value += entry_string + " "
+                entry_string = (f"{Policy.EntryType.Name(entry.type)} " + entry.key)
+                value += f"{entry_string} "
             output[policy.name] = value
 
         policies_snapshot = {
@@ -354,9 +353,9 @@ def _do_identity_policy_list(args):
         if args.format == 'json':
             print(json.dumps(policies_snapshot, indent=2, sort_keys=True))
         else:
-            print(yaml.dump(policies_snapshot, default_flow_style=False)[0:-1])
+            print(yaml.dump(policies_snapshot, default_flow_style=False)[:-1])
     else:
-        raise AssertionError('Unknown format {}'.format(args.format))
+        raise AssertionError(f'Unknown format {args.format}')
 
 
 def _do_identity_role_create(args):
@@ -378,8 +377,7 @@ def _do_identity_role_create(args):
             with open(args.output, 'wb') as batch_file:
                 batch_file.write(batch_list.SerializeToString())
         except IOError as e:
-            raise CliException(
-                'Unable to write to batch file: {}'.format(str(e))) from e
+            raise CliException(f'Unable to write to batch file: {str(e)}') from e
     elif args.url is not None:
         rest_client = RestClient(args.url)
         rest_client.send_batches(batch_list)
@@ -389,9 +387,7 @@ def _do_identity_role_create(args):
             start_time = time.time()
 
             while wait_time < args.wait:
-                statuses = rest_client.get_statuses(
-                    [batch_id],
-                    args.wait - int(wait_time))
+                statuses = rest_client.get_statuses([batch_id], args.wait - wait_time)
                 wait_time = time.time() - start_time
 
                 if statuses[0]['status'] == 'COMMITTED':
@@ -425,9 +421,7 @@ def _do_identity_role_list(args):
         decoded = b64decode(state_value['data'])
         role_list.ParseFromString(decoded)
 
-        for role in role_list.roles:
-            printable_roles.append(role)
-
+        printable_roles.extend(iter(role_list.roles))
     printable_roles.sort(key=lambda r: r.name)
 
     if args.format == 'default':
@@ -436,10 +430,13 @@ def _do_identity_role_list(args):
             # Set value width to the available terminal space, or the min width
             width = tty_width - len(role.name) - 3
             width = width if width > _MIN_PRINT_WIDTH else _MIN_PRINT_WIDTH
-            value = (role.policy_name[:width] + '...'
-                     if len(role.policy_name) > width
-                     else role.policy_name)
-            print('{}: {}'.format(role.name, value))
+            value = (
+                f'{role.policy_name[:width]}...'
+                if len(role.policy_name) > width
+                else role.policy_name
+            )
+
+            print(f'{role.name}: {value}')
     elif args.format == 'csv':
         try:
             writer = csv.writer(sys.stdout, quoting=csv.QUOTE_ALL)
@@ -448,7 +445,7 @@ def _do_identity_role_list(args):
                 writer.writerow([role.name, role.policy_name])
         except csv.Error:
             raise CliException('Error writing CSV') from CliException
-    elif args.format == 'json' or args.format == 'yaml':
+    elif args.format in ['json', 'yaml']:
         roles_snapshot = {
             'head': head,
             'roles': {role.name: role.policy_name
@@ -457,9 +454,9 @@ def _do_identity_role_list(args):
         if args.format == 'json':
             print(json.dumps(roles_snapshot, indent=2, sort_keys=True))
         else:
-            print(yaml.dump(roles_snapshot, default_flow_style=False)[0:-1])
+            print(yaml.dump(roles_snapshot, default_flow_style=False)[:-1])
     else:
-        raise AssertionError('Unknown format {}'.format(args.format))
+        raise AssertionError(f'Unknown format {args.format}')
 
 
 def _create_policy_txn(signer, policy_name, rules):
@@ -494,12 +491,11 @@ def _create_policy_txn(signer, policy_name, rules):
 
     header_bytes = header.SerializeToString()
 
-    transaction = Transaction(
+    return Transaction(
         header=header_bytes,
         payload=payload.SerializeToString(),
-        header_signature=signer.sign(header_bytes))
-
-    return transaction
+        header_signature=signer.sign(header_bytes),
+    )
 
 
 def _create_role_txn(signer, role_name, policy_name):
@@ -524,12 +520,11 @@ def _create_role_txn(signer, role_name, policy_name):
 
     header_bytes = header.SerializeToString()
 
-    transaction = Transaction(
+    return Transaction(
         header=header_bytes,
         payload=payload.SerializeToString(),
-        header_signature=signer.sign(header_bytes))
-
-    return transaction
+        header_signature=signer.sign(header_bytes),
+    )
 
 
 def _read_signer(key_filename):
@@ -547,22 +542,24 @@ def _read_signer(key_filename):
     """
     filename = key_filename
     if filename is None:
-        filename = os.path.join(os.path.expanduser('~'),
-                                '.sawtooth',
-                                'keys',
-                                getpass.getuser() + '.priv')
+        filename = os.path.join(
+            os.path.expanduser('~'),
+            '.sawtooth',
+            'keys',
+            f'{getpass.getuser()}.priv',
+        )
+
 
     try:
         with open(filename, 'r') as key_file:
             signing_key = key_file.read().strip()
     except IOError as e:
-        raise CliException('Unable to read key file: {}'.format(str(e))) from e
+        raise CliException(f'Unable to read key file: {str(e)}') from e
 
     try:
         private_key = Secp256k1PrivateKey.from_hex(signing_key)
     except ParseError as e:
-        raise CliException(
-            'Unable to read key in file: {}'.format(str(e))) from e
+        raise CliException(f'Unable to read key in file: {str(e)}') from e
 
     context = create_context('secp256k1')
     crypto_factory = CryptoFactory(context)

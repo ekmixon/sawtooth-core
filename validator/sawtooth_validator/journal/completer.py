@@ -177,16 +177,13 @@ class Completer:
             return None
 
         # used to supplement batch_cache, contains batches already in block
-        temp_batches = {}
-        for batch in block.batches:
-            temp_batches[batch.header_signature] = batch
-
+        temp_batches = {batch.header_signature: batch for batch in block.batches}
         # The block is missing batches. Check to see if we can complete it.
         if len(block.batches) != len(block.header.batch_ids):
             building = True
             for batch_id in block.header.batch_ids:
                 if batch_id not in self._batch_cache and \
-                        batch_id not in temp_batches:
+                            batch_id not in temp_batches:
                     # Request all missing batches
                     if batch_id not in self._incomplete_blocks:
                         self._incomplete_blocks[batch_id] = [block]
@@ -263,7 +260,7 @@ class Completer:
             for dependency in txn_header.dependencies:
                 # Check to see if the dependency has been seen or is committed
                 if dependency not in self._seen_txns and not \
-                        self._transaction_committed(dependency):
+                            self._transaction_committed(dependency):
                     self._unsatisfied_dependency_count.inc()
 
                     # Check to see if the dependency has already been requested
@@ -297,19 +294,20 @@ class Completer:
 
     def _process_incomplete_blocks(self, key):
         # Keys are either a block_id or batch_id
-        if key in self._incomplete_blocks:
-            to_complete = deque()
-            to_complete.append(key)
+        if key not in self._incomplete_blocks:
+            return
+        to_complete = deque()
+        to_complete.append(key)
 
-            while to_complete:
-                my_key = to_complete.popleft()
-                if my_key in self._incomplete_blocks:
-                    inc_blocks = self._incomplete_blocks[my_key]
-                    for inc_block in inc_blocks:
-                        if self._complete_block(inc_block):
-                            self._send_block(inc_block.block)
-                            to_complete.append(inc_block.header_signature)
-                    del self._incomplete_blocks[my_key]
+        while to_complete:
+            my_key = to_complete.popleft()
+            if my_key in self._incomplete_blocks:
+                inc_blocks = self._incomplete_blocks[my_key]
+                for inc_block in inc_blocks:
+                    if self._complete_block(inc_block):
+                        self._send_block(inc_block.block)
+                        to_complete.append(inc_block.header_signature)
+                del self._incomplete_blocks[my_key]
 
     def _send_block(self, block):
         self._on_block_received(block.header_signature)

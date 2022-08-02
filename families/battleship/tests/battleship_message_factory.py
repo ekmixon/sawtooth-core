@@ -23,12 +23,12 @@ class BattleshipMessageFactory:
         self._factory = MessageFactory(
             family_name="battleship",
             family_version="1.0",
-            namespace=MessageFactory.sha512("battleship".encode("utf-8"))[0:6],
+            namespace=MessageFactory.sha512("battleship".encode("utf-8"))[:6],
             signer=signer,
         )
 
     def _game_to_address(self, game):
-        return self._factory.namespace + self._factory.sha512(game.encode())[0:64]
+        return self._factory.namespace + self._factory.sha512(game.encode())[:64]
 
     def create_tp_register(self):
         return self._factory.create_tp_register()

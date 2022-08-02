@@ -38,9 +38,7 @@ def load_cli_config(args):
 
     for config in (toml_config, default_cli_config):
         for key, val in config.items():
-            if key in args and getattr(args, key) is not None:
-                pass
-            else:
+            if key not in args or getattr(args, key) is None:
                 setattr(args, key, val)
 
 
@@ -68,7 +66,9 @@ def _load_toml_cli_config(filename=None):
             raw_config = fd.read()
     except IOError as e:
         raise CliConfigurationError(
-            "Unable to load CLI configuration file: {}".format(str(e))) from e
+            f"Unable to load CLI configuration file: {str(e)}"
+        ) from e
+
 
     return toml.loads(raw_config)
 

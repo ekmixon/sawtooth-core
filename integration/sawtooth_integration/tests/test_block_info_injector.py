@@ -46,8 +46,9 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 WAIT = 300
 
-INTKEY_ADDRESS_PREFIX = hashlib.sha512(
-    'intkey'.encode('utf-8')).hexdigest()[0:6]
+INTKEY_ADDRESS_PREFIX = hashlib.sha512('intkey'.encode('utf-8')).hexdigest()[
+    :6
+]
 
 
 def make_intkey_address(name):
@@ -73,7 +74,7 @@ def get_block_info(block_num):
 
 
 def get_state(address):
-    response = query_rest_api('/state/%s' % address)
+    response = query_rest_api(f'/state/{address}')
     return base64.b64decode(response['data'])
 
 
@@ -81,14 +82,14 @@ def post_batch(batch):
     headers = {'Content-Type': 'application/octet-stream'}
     response = query_rest_api(
         '/batches', data=batch, headers=headers)
-    response = submit_request('{}&wait={}'.format(response['link'], WAIT))
+    response = submit_request(f"{response['link']}&wait={WAIT}")
     return response
 
 
 def query_rest_api(suffix='', data=None, headers=None):
     if headers is None:
         headers = {}
-    url = 'http://rest-api:8008' + suffix
+    url = f'http://rest-api:8008{suffix}'
     return submit_request(urllib.request.Request(url, data, headers))
 
 

@@ -78,7 +78,7 @@ class TestNetworkPermissioning(unittest.TestCase):
 
         """
 
-        walter = Admin("http://127.0.0.1:{}".format(8008 + 0))
+        walter = Admin(f"http://127.0.0.1:{8008 + 0}")
 
         sawtooth_home0 = mkdtemp()
         self.sawtooth_home[0] = sawtooth_home0
@@ -90,15 +90,17 @@ class TestNetworkPermissioning(unittest.TestCase):
             write_validator_config(
                 sawtooth_home0,
                 roles={"network": "trust"},
-                endpoint="tcp://127.0.0.1:{}".format(8800 + 0),
+                endpoint=f"tcp://127.0.0.1:{8800 + 0}",
                 bind=[
-                    "network:tcp://127.0.0.1:{}".format(8800 + 0),
-                    "component:tcp://127.0.0.1:{}".format(4004 + 0),
-                    "consensus:tcp://127.0.0.1:{}".format(5050 + 0)
+                    f"network:tcp://127.0.0.1:{8800 + 0}",
+                    f"component:tcp://127.0.0.1:{4004 + 0}",
+                    f"consensus:tcp://127.0.0.1:{5050 + 0}",
                 ],
-                seeds=["tcp://127.0.0.1:{}".format(8800 + 1)],
+                seeds=[f"tcp://127.0.0.1:{8800 + 1}"],
                 peering="dynamic",
-                scheduler='parallel')
+                scheduler='parallel',
+            )
+
             validator_non_genesis_init(sawtooth_home1)
             validator_genesis_init(
                 sawtooth_home0,
@@ -112,15 +114,17 @@ class TestNetworkPermissioning(unittest.TestCase):
             write_validator_config(
                 sawtooth_home1,
                 roles={"network": "trust"},
-                endpoint="tcp://127.0.0.1:{}".format(8800 + 1),
+                endpoint=f"tcp://127.0.0.1:{8800 + 1}",
                 bind=[
-                    "network:tcp://127.0.0.1:{}".format(8800 + 1),
-                    "component:tcp://127.0.0.1:{}".format(4004 + 1),
-                    "consensus:tcp://127.0.0.1:{}".format(5050 + 1)
+                    f"network:tcp://127.0.0.1:{8800 + 1}",
+                    f"component:tcp://127.0.0.1:{4004 + 1}",
+                    f"consensus:tcp://127.0.0.1:{5050 + 1}",
                 ],
                 peering="dynamic",
-                seeds=["tcp://127.0.0.1:{}".format(8800 + 0)],
-                scheduler='parallel')
+                seeds=[f"tcp://127.0.0.1:{8800 + 0}"],
+                scheduler='parallel',
+            )
+
 
             self.processes.extend(start_validator(1, sawtooth_home1))
             self.clients.append(Client(NodeController.http_address(1)))
@@ -197,7 +201,7 @@ class TestNetworkPermissioning(unittest.TestCase):
 
         """
 
-        walter = Admin("http://127.0.0.1:{}".format(8008 + 2))
+        walter = Admin(f"http://127.0.0.1:{8008 + 2}")
 
         processes = []
 
@@ -211,15 +215,17 @@ class TestNetworkPermissioning(unittest.TestCase):
             write_validator_config(
                 sawtooth_home0,
                 roles={"network": "challenge"},
-                endpoint="tcp://127.0.0.1:{}".format(8800 + 2),
+                endpoint=f"tcp://127.0.0.1:{8800 + 2}",
                 bind=[
-                    "network:tcp://127.0.0.1:{}".format(8800 + 2),
-                    "component:tcp://127.0.0.1:{}".format(4004 + 2),
-                    "consensus:tcp://127.0.0.1:{}".format(5050 + 2)
+                    f"network:tcp://127.0.0.1:{8800 + 2}",
+                    f"component:tcp://127.0.0.1:{4004 + 2}",
+                    f"consensus:tcp://127.0.0.1:{5050 + 2}",
                 ],
-                seeds=["tcp://127.0.0.1:{}".format(8800 + 3)],
+                seeds=[f"tcp://127.0.0.1:{8800 + 3}"],
                 peering="dynamic",
-                scheduler='parallel')
+                scheduler='parallel',
+            )
+
             validator_non_genesis_init(sawtooth_home1)
             validator_genesis_init(
                 sawtooth_home0,
@@ -233,15 +239,17 @@ class TestNetworkPermissioning(unittest.TestCase):
             write_validator_config(
                 sawtooth_home1,
                 roles={"network": "challenge"},
-                endpoint="tcp://127.0.0.1:{}".format(8800 + 3),
+                endpoint=f"tcp://127.0.0.1:{8800 + 3}",
                 bind=[
-                    "network:tcp://127.0.0.1:{}".format(8800 + 3),
-                    "component:tcp://127.0.0.1:{}".format(4004 + 3),
-                    "consensus:tcp://127.0.0.1:{}".format(5050 + 3)
+                    f"network:tcp://127.0.0.1:{8800 + 3}",
+                    f"component:tcp://127.0.0.1:{4004 + 3}",
+                    f"consensus:tcp://127.0.0.1:{5050 + 3}",
                 ],
                 peering="dynamic",
-                seeds=["tcp://127.0.0.1:{}".format(8800 + 2)],
-                scheduler='parallel')
+                seeds=[f"tcp://127.0.0.1:{8800 + 2}"],
+                scheduler='parallel',
+            )
+
 
             processes.extend(start_validator(3, sawtooth_home1))
             self.clients.append(Client(NodeController.http_address(3)))
@@ -378,8 +386,8 @@ class Admin:
         self._rest_endpoint = rest_endpoint
 
     def set_public_key_for_role(self, policy, role, permit_keys, deny_keys):
-        permits = ["PERMIT_KEY {}".format(key) for key in permit_keys]
-        denies = ["DENY_KEY {}".format(key) for key in deny_keys]
+        permits = [f"PERMIT_KEY {key}" for key in permit_keys]
+        denies = [f"DENY_KEY {key}" for key in deny_keys]
         self._run_identity_commands(policy, role, denies + permits)
 
     def _run_identity_commands(self, policy, role, rules):
@@ -546,17 +554,22 @@ def validator_genesis_init(sawtooth_home_genesis,
     ], check=True)
 
     policy = "policy"
-    subprocess.run(['sawtooth',
-                    'identity',
-                    'policy',
-                    'create',
-                    '-k', priv,
-                    '-o', os.path.join(sawtooth_home_genesis,
-                                       'data', 'policy.batch'),
-                    policy,
-                    "PERMIT_KEY {} PERMIT_KEY {}".format(priv_key,
-                                                         priv_key_non)],
-                   check=True)
+    subprocess.run(
+        [
+            'sawtooth',
+            'identity',
+            'policy',
+            'create',
+            '-k',
+            priv,
+            '-o',
+            os.path.join(sawtooth_home_genesis, 'data', 'policy.batch'),
+            policy,
+            f"PERMIT_KEY {priv_key} PERMIT_KEY {priv_key_non}",
+        ],
+        check=True,
+    )
+
 
     subprocess.run(['sawtooth',
                     'identity',

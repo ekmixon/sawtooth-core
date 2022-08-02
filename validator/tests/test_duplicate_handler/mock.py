@@ -37,9 +37,7 @@ class MockChainController:
         self.blocks = {}
 
     def has_block(self, block_id):
-        if block_id in self.blocks:
-            return True
-        return False
+        return block_id in self.blocks
 
     def add_block(self, block_id):
         self.blocks[block_id] = 1
@@ -50,9 +48,7 @@ class MockPublisher:
         self.batches = []
 
     def has_batch(self, batch_id):
-        if batch_id in self.batches:
-            return True
-        return False
+        return batch_id in self.batches
 
     def add_batch(self, batch_id):
         self.batches.append(batch_id)

@@ -48,8 +48,9 @@ LOGGER.setLevel(logging.INFO)
 
 WAIT = 300
 XO_PREFIX = '5b7349'
-INTKEY_ADDRESS_PREFIX = hashlib.sha512(
-    'intkey'.encode('utf-8')).hexdigest()[0:6]
+INTKEY_ADDRESS_PREFIX = hashlib.sha512('intkey'.encode('utf-8')).hexdigest()[
+    :6
+]
 
 
 def make_intkey_address(name):
@@ -75,32 +76,31 @@ def get_block_info(block_num):
 
 
 def get_state(address):
-    response = query_rest_api('/state/%s' % address)
+    response = query_rest_api(f'/state/{address}')
     return base64.b64decode(response['data'])
 
 
 def get_state_by_prefix(prefix):
-    response = query_rest_api('/state?address=' + prefix)
+    response = query_rest_api(f'/state?address={prefix}')
     return response['data']
 
 
 def get_xo_state():
-    state = get_state_by_prefix(XO_PREFIX)
-    return state
+    return get_state_by_prefix(XO_PREFIX)
 
 
 def post_batch(batch):
     headers = {'Content-Type': 'application/octet-stream'}
     response = query_rest_api(
         '/batches', data=batch, headers=headers)
-    response = submit_request('{}&wait={}'.format(response['link'], WAIT))
+    response = submit_request(f"{response['link']}&wait={WAIT}")
     return response
 
 
 def query_rest_api(suffix='', data=None, headers=None):
     if headers is None:
         headers = {}
-    url = 'http://rest-api:8008' + suffix
+    url = f'http://rest-api:8008{suffix}'
     return submit_request(urllib.request.Request(url, data, headers))
 
 
@@ -211,10 +211,7 @@ class TestNamespaceRestriction(unittest.TestCase):
         # Assert all block info transactions are committed
         for i, batch in enumerate(batches):
             post_batch(batch)
-            send_xo_cmd('{} --url {} --wait {}'.format(
-                xo_cmds[i],
-                'http://rest-api:8008',
-                WAIT))
+            send_xo_cmd(f'{xo_cmds[i]} --url http://rest-api:8008 --wait {WAIT}')
             block_info = get_block_info(i)
             self.assertEqual(block_info.block_num, i)
 
@@ -223,7 +220,7 @@ class TestNamespaceRestriction(unittest.TestCase):
         for block in get_blocks()[:-1]:
             LOGGER.debug(block['header']['block_num'])
             family_name = \
-                block['batches'][0]['transactions'][0]['header']['family_name']
+                    block['batches'][0]['transactions'][0]['header']['family_name']
             self.assertEqual(family_name, 'block_info')
             for batch in block['batches'][1:]:
                 self.assertEqual(

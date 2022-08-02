@@ -97,11 +97,10 @@ def _do_config_proposal_create(args):
             with open(args.output, 'wb') as batch_file:
                 batch_file.write(batch_list.SerializeToString())
         except IOError as e:
-            raise CliException(
-                'Unable to write to batch file: {}'.format(str(e))) from e
+            raise CliException(f'Unable to write to batch file: {str(e)}') from e
     elif args.sabre_output is not None:
         for i, txn in enumerate(txns):
-            with open("{}-{}".format(args.sabre_output, i), 'wb') as outfile:
+            with open(f"{args.sabre_output}-{i}", 'wb') as outfile:
                 outfile.write(txn.payload)
     elif args.url is not None:
         rest_client = RestClient(args.url)
@@ -146,7 +145,7 @@ def _do_config_proposal_list(args):
                 candidate.proposal_id,
                 candidate.proposal.setting,
                 candidate.proposal.value])
-    elif args.format == 'json' or args.format == 'yaml':
+    elif args.format in ['json', 'yaml']:
         candidates_snapshot = \
             {c.proposal_id: {c.proposal.setting: c.proposal.value}
              for c in candidates}
@@ -154,8 +153,10 @@ def _do_config_proposal_list(args):
         if args.format == 'json':
             print(json.dumps(candidates_snapshot, indent=2, sort_keys=True))
         else:
-            print(yaml.dump(candidates_snapshot,
-                            default_flow_style=False)[0:-1])
+            print(
+                yaml.dump(candidates_snapshot, default_flow_style=False)[:-1]
+            )
+
     else:
         raise AssertionError('Unknown format {}'.format(args.format))
 
@@ -171,11 +172,14 @@ def _do_config_proposal_vote(args):
 
     proposals = _get_proposals(rest_client)
 
-    proposal = None
-    for candidate in proposals.candidates:
-        if candidate.proposal_id == args.proposal_id:
-            proposal = candidate
-            break
+    proposal = next(
+        (
+            candidate
+            for candidate in proposals.candidates
+            if candidate.proposal_id == args.proposal_id
+        ),
+        None,
+    )
 
     if proposal is None:
         raise CliException('No proposal exists with the given id')
@@ -201,17 +205,20 @@ def _do_config_genesis(args):
     signer = _read_signer(args.key)
     public_key = signer.get_public_key().as_hex()
 
-    authorized_keys = args.authorized_key if args.authorized_key else \
-        [public_key]
+    authorized_keys = args.authorized_key or [public_key]
     if public_key not in authorized_keys:
         authorized_keys.append(public_key)
 
-    txns = []
+    txns = [
+        _create_propose_txn(
+            signer,
+            (
+                'sawtooth.settings.vote.authorized_keys',
+                ','.join(authorized_keys),
+            ),
+        )
+    ]
 
-    txns.append(_create_propose_txn(
-        signer,
-        ('sawtooth.settings.vote.authorized_keys',
-         ','.join(authorized_keys))))
 
     if args.approval_threshold is not None:
         if args.approval_threshold < 1:
@@ -233,10 +240,9 @@ def _do_config_genesis(args):
     try:
         with open(args.output, 'wb') as batch_file:
             batch_file.write(batch_list.SerializeToString())
-        print('Generated {}'.format(args.output))
+        print(f'Generated {args.output}')
     except IOError as e:
-        raise CliException(
-            'Unable to write to batch file: {}'.format(str(e))) from e
+        raise CliException(f'Unable to write to batch file: {str(e)}') from e
 
 
 def _get_proposals(rest_client):
@@ -277,22 +283,24 @@ def _read_signer(key_filename):
     """
     filename = key_filename
     if filename is None:
-        filename = os.path.join(os.path.expanduser('~'),
-                                '.sawtooth',
-                                'keys',
-                                getpass.getuser() + '.priv')
+        filename = os.path.join(
+            os.path.expanduser('~'),
+            '.sawtooth',
+            'keys',
+            f'{getpass.getuser()}.priv',
+        )
+
 
     try:
         with open(filename, 'r') as key_file:
             signing_key = key_file.read().strip()
     except IOError as e:
-        raise CliException('Unable to read key file: {}'.format(str(e))) from e
+        raise CliException(f'Unable to read key file: {str(e)}') from e
 
     try:
         private_key = Secp256k1PrivateKey.from_hex(signing_key)
     except ParseError as e:
-        raise CliException(
-            'Unable to read key in file: {}'.format(str(e))) from e
+        raise CliException(f'Unable to read key in file: {str(e)}') from e
 
     context = create_context('secp256k1')
     crypto_factory = CryptoFactory(context)
@@ -342,11 +350,7 @@ def _create_vote_txn(signer, proposal_id, setting_key, vote_value):
     """Creates an individual sawtooth_settings transaction for voting on a
     proposal for a particular setting key.
     """
-    if vote_value == 'accept':
-        vote_id = SettingVote.ACCEPT
-    else:
-        vote_id = SettingVote.REJECT
-
+    vote_id = SettingVote.ACCEPT if vote_value == 'accept' else SettingVote.REJECT
     vote = SettingVote(proposal_id=proposal_id, vote=vote_id)
     payload = SettingsPayload(data=vote.SerializeToString(),
                               action=SettingsPayload.VOTE)
@@ -638,10 +642,7 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None,
     args = parser.parse_args(args)
 
     if with_loggers is True:
-        if args.verbose is None:
-            verbose_level = 0
-        else:
-            verbose_level = args.verbose
+        verbose_level = 0 if args.verbose is None else args.verbose
         setup_loggers(verbose_level=verbose_level)
 
     if args.subcommand == 'proposal' and args.proposal_cmd == 'create':
@@ -654,8 +655,8 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None,
         _do_config_genesis(args)
     else:
         raise CliException(
-            '"{}" is not a valid subcommand of "config"'.format(
-                args.subcommand))
+            f'"{args.subcommand}" is not a valid subcommand of "config"'
+        )
 
 
 def main_wrapper():
@@ -663,7 +664,7 @@ def main_wrapper():
     try:
         main()
     except CliException as e:
-        print("Error: {}".format(e), file=sys.stderr)
+        print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:
         pass

@@ -181,18 +181,16 @@ class _ClientRequestHandler(Handler, metaclass=abc.ABCMeta):
         Raises:
             ResponseFailed: Failed to retrieve a head block
         """
-        if request.head_id:
-            if self._id_regex.fullmatch(request.head_id) is None:
-                LOGGER.debug('Invalid head id requested: %s', request.head_id)
-                raise _ResponseFailed(self._status.NO_ROOT)
-            try:
-                return self._block_store[request.head_id]
-            except KeyError as e:
-                LOGGER.debug('Unable to find block "%s" in store', e)
-                raise _ResponseFailed(self._status.NO_ROOT) from e
-
-        else:
+        if not request.head_id:
             return self._get_chain_head()
+        if self._id_regex.fullmatch(request.head_id) is None:
+            LOGGER.debug('Invalid head id requested: %s', request.head_id)
+            raise _ResponseFailed(self._status.NO_ROOT)
+        try:
+            return self._block_store[request.head_id]
+        except KeyError as e:
+            LOGGER.debug('Unable to find block "%s" in store', e)
+            raise _ResponseFailed(self._status.NO_ROOT) from e
 
     def _get_chain_head(self):
         if self._block_store.chain_head:
@@ -364,11 +362,7 @@ class _Pager:
         limit = min(paging.limit, MAX_PAGE_SIZE) or DEFAULT_PAGE_SIZE
         # Find the start index from the location marker sent
         try:
-            if paging.start:
-                start_index = cls.index_by_id(paging.start, resources)
-            else:
-                start_index = 0
-
+            start_index = cls.index_by_id(paging.start, resources) if paging.start else 0
             if start_index < 0 or start_index >= len(resources):
                 raise AssertionError
         except AssertionError:
@@ -496,11 +490,7 @@ class _Sorter:
             self._fail_status = fail_status
             self._header_proto = header_proto
 
-            if controls.reverse:
-                self.xform_result = lambda x: -x
-            else:
-                self.xform_result = lambda x: x
-
+            self.xform_result = (lambda x: -x) if controls.reverse else (lambda x: x)
             if header_proto and self._keys[0] == 'header':
                 self._had_explicit_header = True
                 self._keys = self._keys[1:]
@@ -682,10 +672,11 @@ class BatchStatusRequest(_ClientRequestHandler):
             statuses = _format_batch_statuses(
                 statuses_dict, request.batch_ids, self._batch_tracker)
 
-        if not statuses:
-            return self._status.NO_RESOURCE
-
-        return self._wrap_response(batch_statuses=statuses)
+        return (
+            self._wrap_response(batch_statuses=statuses)
+            if statuses
+            else self._status.NO_RESOURCE
+        )
 
 
 class StateListRequest(_ClientRequestHandler):
@@ -719,23 +710,22 @@ class StateListRequest(_ClientRequestHandler):
             entries,
             self._status.INVALID_PAGING)
 
-        if not entries:
-            return self._wrap_response(
-                self._status.NO_RESOURCE,
-                state_root=state_root,
-                paging=paging)
-
-        return self._wrap_response(
-            state_root=state_root,
-            paging=paging,
-            entries=entries)
+        return (
+            self._wrap_response(
+                state_root=state_root, paging=paging, entries=entries
+            )
+            if entries
+            else self._wrap_response(
+                self._status.NO_RESOURCE, state_root=state_root, paging=paging
+            )
+        )
 
     @staticmethod
     def is_reverse(sorting, fail_status):
         if not sorting:
             return False
 
-        if not sorting[0].keys == ['default']:
+        if sorting[0].keys != ['default']:
             raise _ResponseFailed(fail_status)
 
         return sorting[0].reverse
@@ -821,8 +811,7 @@ class BlockListRequest(_ClientRequestHandler):
                 # iterator
                 blocks = list(map(lambda blkw: blkw.block, blocks))
 
-                next_block = next(block_iter, None)
-                if next_block:
+                if next_block := next(block_iter, None):
                     next_block_num = block_num_to_hex(
                         next_block.block_num)
                 else:
@@ -830,40 +819,34 @@ class BlockListRequest(_ClientRequestHandler):
 
                 block_id = blocks[0].header_signature
                 start = self._block_store[block_id].block_num
-            except ValueError:
-                if paging.start:
-                    return self._status.INVALID_PAGING
-
-                return self._status.NO_ROOT
-            except KeyError:
-                if paging.start:
-                    return self._status.INVALID_PAGING
-
-                return self._status.NO_ROOT
-
+            except (ValueError, KeyError):
+                return self._status.INVALID_PAGING if paging.start else self._status.NO_ROOT
             paging_response = client_list_control_pb2.ClientPagingResponse(
                 next=next_block_num,
                 limit=limit,
                 start=block_num_to_hex(start)
             )
 
-        if not blocks:
-            return self._wrap_response(
+        return (
+            self._wrap_response(
+                head_id=head_block.identifier,
+                paging=paging_response,
+                blocks=blocks,
+            )
+            if blocks
+            else self._wrap_response(
                 self._status.NO_RESOURCE,
                 head_id=head_block.identifier,
-                paging=paging_response)
-
-        return self._wrap_response(
-            head_id=head_block.identifier,
-            paging=paging_response,
-            blocks=blocks)
+                paging=paging_response,
+            )
+        )
 
     @staticmethod
     def is_reverse(sorting, fail_status):
         if not sorting:
             return False
 
-        if not sorting[0].keys == ['block_num']:
+        if sorting[0].keys != ['block_num']:
             raise _ResponseFailed(fail_status)
 
         return sorting[0].reverse
@@ -980,23 +963,20 @@ class BatchListRequest(_ClientRequestHandler):
             batches,
             self._status.INVALID_PAGING)
 
-        if not batches:
-            return self._wrap_response(
-                self._status.NO_RESOURCE,
-                head_id=head_id,
-                paging=paging)
-
-        return self._wrap_response(
-            head_id=head_id,
-            paging=paging,
-            batches=batches)
+        return (
+            self._wrap_response(head_id=head_id, paging=paging, batches=batches)
+            if batches
+            else self._wrap_response(
+                self._status.NO_RESOURCE, head_id=head_id, paging=paging
+            )
+        )
 
     @staticmethod
     def is_reverse(sorting, fail_status):
         if not sorting:
             return False
 
-        if not sorting[0].keys == ['default']:
+        if sorting[0].keys != ['default']:
             raise _ResponseFailed(fail_status)
 
         return sorting[0].reverse
@@ -1049,23 +1029,22 @@ class TransactionListRequest(_ClientRequestHandler):
             transactions,
             self._status.INVALID_PAGING)
 
-        if not transactions:
-            return self._wrap_response(
-                self._status.NO_RESOURCE,
-                head_id=head_id,
-                paging=paging)
-
-        return self._wrap_response(
-            head_id=head_id,
-            paging=paging,
-            transactions=transactions)
+        return (
+            self._wrap_response(
+                head_id=head_id, paging=paging, transactions=transactions
+            )
+            if transactions
+            else self._wrap_response(
+                self._status.NO_RESOURCE, head_id=head_id, paging=paging
+            )
+        )
 
     @staticmethod
     def is_reverse(sorting, fail_status):
         if not sorting:
             return False
 
-        if not sorting[0].keys == ['default']:
+        if sorting[0].keys != ['default']:
             raise _ResponseFailed(fail_status)
 
         return sorting[0].reverse

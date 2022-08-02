@@ -32,9 +32,7 @@ class TestShutdownSmoke(unittest.TestCase):
     def setUpClass(cls):
         cls._sawtooth_core = cls._find_host_sawtooth_core()
         cls._id = os.environ.get("ISOLATION_ID", "latest")
-        cls._validator_image = "{}:{}".format(
-            os.environ.get("VALIDATOR_IMAGE_NAME"),
-            cls._id)
+        cls._validator_image = f'{os.environ.get("VALIDATOR_IMAGE_NAME")}:{cls._id}'
 
     @unittest.skip("Skipping until STL-120 is complete: has periodic failures")
     def test_resting_shutdown_sigint(self):
@@ -120,7 +118,7 @@ class TestShutdownSmoke(unittest.TestCase):
             sig (str): examples: SIGTERM, SIGINT
             container_name (str): The name of the docker container
         """
-        args = ['docker', 'kill', '--signal={}'.format(sig), container_name]
+        args = ['docker', 'kill', f'--signal={sig}', container_name]
 
         # Not catching the CalledProcessError so the test errors and stops
         # if there is a problem calling docker.
@@ -171,17 +169,20 @@ class TestShutdownSmoke(unittest.TestCase):
 
     def _run_genesis(self):
         return self._docker_run(
-            ['-d',
-             '-v',
-             '{}:/project/sawtooth-core'.format(self._sawtooth_core),
-             '-v',
-             '/etc/sawtooth',
-             '-v',
-             '/var/lib/sawtooth',
-             self._validator_image,
-             'bash',
-             '-c',
-             "sawadm keygen && sawadm genesis"])
+            [
+                '-d',
+                '-v',
+                f'{self._sawtooth_core}:/project/sawtooth-core',
+                '-v',
+                '/etc/sawtooth',
+                '-v',
+                '/var/lib/sawtooth',
+                self._validator_image,
+                'bash',
+                '-c',
+                "sawadm keygen && sawadm genesis",
+            ]
+        )
 
     def _start_validator(self, prior_container, early, extra):
         return self._docker_run(
@@ -199,15 +200,18 @@ class TestShutdownSmoke(unittest.TestCase):
 
     def _run_keygen_non_genesis(self):
         return self._docker_run(
-            ['-d',
-             '-v',
-             '{}:/project/sawtooth-core'.format(self._sawtooth_core),
-             '-v',
-             '/etc/sawtooth',
-             self._validator_image,
-             "bash",
-             '-c',
-             "sawadm keygen"])
+            [
+                '-d',
+                '-v',
+                f'{self._sawtooth_core}:/project/sawtooth-core',
+                '-v',
+                '/etc/sawtooth',
+                self._validator_image,
+                "bash",
+                '-c',
+                "sawadm keygen",
+            ]
+        )
 
     def _startup(self):
         containers = []
@@ -218,21 +222,36 @@ class TestShutdownSmoke(unittest.TestCase):
             validator_genesis = self._start_validator(
                 genesis,
                 ['--name', genesis_name],
-                ['--endpoint', 'tcp://{}:8800'.format(genesis_name),
-                 '--bind', 'component:tcp://eth0:4004',
-                 '--bind', 'network:tcp://eth0:8800'])
+                [
+                    '--endpoint',
+                    f'tcp://{genesis_name}:8800',
+                    '--bind',
+                    'component:tcp://eth0:4004',
+                    '--bind',
+                    'network:tcp://eth0:8800',
+                ],
+            )
+
             containers.append(validator_genesis)
             self._remove_docker_containers([genesis])
             keygen = self._run_keygen_non_genesis()
             self._wait_for_containers_exit_status([keygen])
             validator_1_name = str(uuid.uuid4())
             validator_non_genesis = self._start_validator(
-                keygen, ['--link', validator_genesis,
-                         '--name', validator_1_name],
-                ['--peers', 'tcp://{}:8800'.format(genesis_name),
-                 '--endpoint', 'tcp://{}:8800'.format(validator_1_name),
-                 '--bind', 'component:tcp://eth0:4004',
-                 '--bind', 'network:tcp://eth0:8800'])
+                keygen,
+                ['--link', validator_genesis, '--name', validator_1_name],
+                [
+                    '--peers',
+                    f'tcp://{genesis_name}:8800',
+                    '--endpoint',
+                    f'tcp://{validator_1_name}:8800',
+                    '--bind',
+                    'component:tcp://eth0:4004',
+                    '--bind',
+                    'network:tcp://eth0:8800',
+                ],
+            )
+
             containers.append(validator_non_genesis)
             self._remove_docker_containers([keygen])
             # Make sure that the validators have completed startup -- cli path

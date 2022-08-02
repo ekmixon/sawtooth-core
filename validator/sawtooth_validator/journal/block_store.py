@@ -52,7 +52,7 @@ def _check_error(return_code):
     if return_code == ErrorCode.StopIteration:
         raise StopIteration()
 
-    raise RuntimeError("An unknown error occurred: {}".format(return_code))
+    raise RuntimeError(f"An unknown error occurred: {return_code}")
 
 
 def _libexec(name, *args):
@@ -123,7 +123,7 @@ class BlockStore(ffi.OwnedPointer):
         try:
             return self._get_block_by_id(key, 'commit_store_get_by_block_id')
         except ValueError:
-            raise KeyError("Unable to find block id: %s" % key) from ValueError
+            raise KeyError(f"Unable to find block id: {key}") from ValueError
 
     def put_blocks(self, blocks):
         c_put_items = (ctypes.POINTER(_PutEntry) * len(blocks))()
@@ -197,9 +197,7 @@ class BlockStore(ffi.OwnedPointer):
         Return the state hash of the head block of the current chain.
         """
         chain_head = self.chain_head
-        if chain_head is not None:
-            return chain_head.state_root_hash
-        return INIT_ROOT_KEY
+        return chain_head.state_root_hash if chain_head is not None else INIT_ROOT_KEY
 
     def get_predecessor_iter(self, starting_block=None):
         """Returns an iterator that traverses block via its predecesssors.
@@ -447,7 +445,7 @@ class _BlockStoreIter(ffi.BlockIterator):
 
         if start is not None:
             c_start_ptr =\
-                ctypes.POINTER(ctypes.c_uint32)(ctypes.c_uint32(start))
+                    ctypes.POINTER(ctypes.c_uint32)(ctypes.c_uint32(start))
         else:
             c_start_ptr = 0
 

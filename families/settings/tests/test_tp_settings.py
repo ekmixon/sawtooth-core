@@ -225,8 +225,11 @@ class TestSettings(TransactionProcessorTestCase):
 
         self._vote(proposal_id, 'my.config.setting', SettingVote.ACCEPT)
 
-        self._expect_get('sawtooth.settings.vote.authorized_keys',
-                         self._public_key + ',some_other_public_key')
+        self._expect_get(
+            'sawtooth.settings.vote.authorized_keys',
+            f'{self._public_key},some_other_public_key',
+        )
+
         self._expect_get('sawtooth.settings.vote.proposals',
                          base64.b64encode(candidates.SerializeToString()))
         self._expect_get('sawtooth.settings.vote.approval_threshold', '2')
@@ -271,7 +274,9 @@ class TestSettings(TransactionProcessorTestCase):
 
         self._expect_get(
             'sawtooth.settings.vote.authorized_keys',
-            self._public_key + ',some_other_public_key,third_public_key')
+            f'{self._public_key},some_other_public_key,third_public_key',
+        )
+
         self._expect_get('sawtooth.settings.vote.proposals',
                          base64.b64encode(candidates.SerializeToString()))
         self._expect_get('sawtooth.settings.vote.approval_threshold', '3')
@@ -328,7 +333,9 @@ class TestSettings(TransactionProcessorTestCase):
 
         self._expect_get(
             'sawtooth.settings.vote.authorized_keys',
-            self._public_key + ',some_other_public_key,a_rejectors_public_key')
+            f'{self._public_key},some_other_public_key,a_rejectors_public_key',
+        )
+
         self._expect_get('sawtooth.settings.vote.proposals',
                          base64.b64encode(candidates.SerializeToString()))
         self._expect_get('sawtooth.settings.vote.approval_threshold', '2')
@@ -367,8 +374,11 @@ class TestSettings(TransactionProcessorTestCase):
 
         self._vote(proposal_id, 'my.config.setting', SettingVote.REJECT)
 
-        self._expect_get('sawtooth.settings.vote.authorized_keys',
-                         self._public_key + ',some_other_public_key')
+        self._expect_get(
+            'sawtooth.settings.vote.authorized_keys',
+            f'{self._public_key},some_other_public_key',
+        )
+
         self._expect_get('sawtooth.settings.vote.proposals',
                          base64.b64encode(candidates.SerializeToString()))
         self._expect_get('sawtooth.settings.vote.approval_threshold', '2')
@@ -389,8 +399,11 @@ class TestSettings(TransactionProcessorTestCase):
         """
         self._propose("foo.bar.count", "1")
 
-        self._expect_get('sawtooth.settings.vote.authorized_keys',
-                         'some_key,' + self._public_key)
+        self._expect_get(
+            'sawtooth.settings.vote.authorized_keys',
+            f'some_key,{self._public_key}',
+        )
+
         self._expect_get('sawtooth.settings.vote.approval_threshold')
 
         # check the old value and set the new one

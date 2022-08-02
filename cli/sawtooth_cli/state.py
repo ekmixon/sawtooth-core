@@ -110,7 +110,7 @@ def do_state(args):
             fmt.print_csv(headers, leaves, parse_leaf_row)
             print('(data for head block: "{}")'.format(head))
 
-        elif args.format == 'json' or args.format == 'yaml':
+        elif args.format in ['json', 'yaml']:
             state_data = {
                 'head': head,
                 'data': [dict(zip(keys, parse_leaf_row(leaf, False)))

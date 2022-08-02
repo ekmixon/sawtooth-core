@@ -72,11 +72,7 @@ class ConnectHandler(Handler):
         if hostname is None:
             return False
 
-        for interface in interfaces:
-            if interface == hostname:
-                return False
-
-        return True
+        return all(interface != hostname for interface in interfaces)
 
     def handle(self, connection_id, message_content):
         """
@@ -285,7 +281,7 @@ class AuthorizationTrustRequestHandler(Handler):
         closed.
         """
         if self._network.get_connection_status(connection_id) != \
-                ConnectionStatus.CONNECTION_REQUEST:
+                    ConnectionStatus.CONNECTION_REQUEST:
             LOGGER.debug("Connection's previous message was not a"
                          " ConnectionRequest, Remove connection to %s",
                          connection_id)
@@ -303,8 +299,7 @@ class AuthorizationTrustRequestHandler(Handler):
         # Check that the connection's public key is allowed by the network role
         roles = self._network.roles
         for role in request.roles:
-            if role == RoleType.Value("NETWORK") or role == \
-                    RoleType.Value("ALL"):
+            if role in [RoleType.Value("NETWORK"), RoleType.Value("ALL")]:
                 permitted = False
                 if "network" in roles:
                     permitted = self._permission_verifier.check_network_role(
@@ -434,13 +429,13 @@ class AuthorizationChallengeSubmitHandler(Handler):
         connection will be closed.
         """
         if self._network.get_connection_status(connection_id) != \
-                ConnectionStatus.AUTH_CHALLENGE_REQUEST:
+                    ConnectionStatus.AUTH_CHALLENGE_REQUEST:
             LOGGER.debug("Connection's previous message was not a"
                          " AuthorizationChallengeRequest, Remove connection to"
                          "%s",
                          connection_id)
             return AuthorizationChallengeSubmitHandler \
-                ._network_violation_result()
+                    ._network_violation_result()
 
         auth_challenge_submit = AuthorizationChallengeSubmit()
         auth_challenge_submit.ParseFromString(message_content)
@@ -451,7 +446,7 @@ class AuthorizationChallengeSubmitHandler(Handler):
             LOGGER.warning("Connection's challenge payload expired before a"
                            "response was received. %s", connection_id)
             return AuthorizationChallengeSubmitHandler \
-                ._network_violation_result()
+                    ._network_violation_result()
 
         context = create_context('secp256k1')
         try:
@@ -462,7 +457,7 @@ class AuthorizationChallengeSubmitHandler(Handler):
                            'verified. Invalid public key %s',
                            auth_challenge_submit.public_key)
             return AuthorizationChallengeSubmitHandler \
-                ._network_violation_result()
+                    ._network_violation_result()
 
         if not context.verify(auth_challenge_submit.signature,
                               payload,
@@ -470,19 +465,18 @@ class AuthorizationChallengeSubmitHandler(Handler):
             LOGGER.warning("Signature was not able to be verified. Remove "
                            "connection to %s", connection_id)
             return AuthorizationChallengeSubmitHandler \
-                ._network_violation_result()
+                    ._network_violation_result()
 
         roles = self._network.roles
         for role in auth_challenge_submit.roles:
-            if role == RoleType.Value("NETWORK") or role == \
-                    RoleType.Value("ALL"):
+            if role in [RoleType.Value("NETWORK"), RoleType.Value("ALL")]:
                 permitted = False
                 if "network" in roles:
                     permitted = self._permission_verifier.check_network_role(
                         auth_challenge_submit.public_key)
                 if not permitted:
                     return AuthorizationChallengeSubmitHandler \
-                        ._network_violation_result()
+                            ._network_violation_result()
 
         self._network.update_connection_public_key(
             connection_id,

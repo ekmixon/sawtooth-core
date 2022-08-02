@@ -35,28 +35,27 @@ def load_identity_signer(key_dir, key_name):
     Returns:
         Signer: the cryptographic signer for the key
     """
-    key_path = os.path.join(key_dir, '{}.priv'.format(key_name))
+    key_path = os.path.join(key_dir, f'{key_name}.priv')
 
     if not os.path.exists(key_path):
-        raise LocalConfigurationError(
-            "No such signing key file: {}".format(key_path))
+        raise LocalConfigurationError(f"No such signing key file: {key_path}")
     if not os.access(key_path, os.R_OK):
-        raise LocalConfigurationError(
-            "Key file is not readable: {}".format(key_path))
+        raise LocalConfigurationError(f"Key file is not readable: {key_path}")
 
     LOGGER.info('Loading signing key: %s', key_path)
     try:
         with open(key_path, 'r') as key_file:
             private_key_str = key_file.read().strip()
     except IOError as e:
-        raise LocalConfigurationError(
-            "Could not load key file: {}".format(str(e))) from e
+        raise LocalConfigurationError(f"Could not load key file: {str(e)}") from e
 
     try:
         private_key = Secp256k1PrivateKey.from_hex(private_key_str)
     except signing.ParseError as e:
         raise LocalConfigurationError(
-            "Invalid key in file {}: {}".format(key_path, str(e))) from e
+            f"Invalid key in file {key_path}: {str(e)}"
+        ) from e
+
 
     context = signing.create_context('secp256k1')
     crypto_factory = CryptoFactory(context)

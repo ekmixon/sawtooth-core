@@ -23,7 +23,7 @@ from jinja2 import Environment, FileSystemLoader
 # Directory paths
 abs_path = os.path.dirname(os.path.realpath(__file__))
 
-DOCS_ABS = abs_path + '/../docs/'
+DOCS_ABS = f'{abs_path}/../docs/'
 OUTPUT_REL = 'source/_autogen'
 TEMPLATE_REL = 'source/_templates'
 
@@ -42,7 +42,7 @@ comments = {
     'default': {'line': '//'}}
 
 # Build globals
-conf = yaml.load(open(template_abs + '/template_config.yaml', 'r'))
+conf = yaml.load(open(f'{template_abs}/template_config.yaml', 'r'))
 env = Environment(
     loader=FileSystemLoader(template_abs),
     trim_blocks=True,
@@ -59,8 +59,8 @@ for name, target in conf['targets'].items():
     template = env.get_template(target['template'])
 
     extension = (re.findall('\.[^.]+$', target['template']) or [''])[0]
-    output_path = output_abs + '/' + name + extension
-    template_path = TEMPLATE_REL + '/' + target['template']
+    output_path = f'{output_abs}/{name}{extension}'
+    template_path = f'{TEMPLATE_REL}/' + target['template']
 
     comment_chars = comments.get(extension, comments['default'])
     warning.stream(
@@ -73,5 +73,5 @@ for name, target in conf['targets'].items():
     output = open(output_path, 'a')
     output.write(template.render(**target.get('args', {})))
 
-print('Templated docs generated. Files located in ' + OUTPUT_REL)
+print(f'Templated docs generated. Files located in {OUTPUT_REL}')
 print()

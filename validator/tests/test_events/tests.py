@@ -60,7 +60,7 @@ from sawtooth_validator.protobuf import validator_pb2
 
 def create_transaction(payload, signer, inputs=None,
                        outputs=None, dependencies=None):
-    addr = '000000' + hashlib.sha512(payload).hexdigest()[:64]
+    addr = f'000000{hashlib.sha512(payload).hexdigest()[:64]}'
 
     if inputs is None:
         inputs = [addr]
@@ -105,12 +105,11 @@ def create_batch(transactions, signer):
 
     signature = signer.sign(header_bytes)
 
-    batch = batch_pb2.Batch(
+    return batch_pb2.Batch(
         header=header_bytes,
         transactions=transactions,
-        header_signature=signature)
-
-    return batch
+        header_signature=signature,
+    )
 
 
 def create_block(block_num=85,
@@ -123,12 +122,13 @@ def create_block(block_num=85,
         block_num=block_num,
         state_root_hash="0987654321fedcba",
         previous_block_id=previous_block_id)
-    block = BlockWrapper(
+    return BlockWrapper(
         block_pb2.Block(
             header_signature=block_id,
             header=block_header.SerializeToString(),
-            batches=batches))
-    return block
+            batches=batches,
+        )
+    )
 
 
 def create_chain(num=10):

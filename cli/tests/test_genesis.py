@@ -70,11 +70,14 @@ class TestGenesisDependencyValidation(unittest.TestCase):
 
         setting_transactions = [
             transaction(
-                'setting{}'.format(idx),
+                f'setting{idx}',
                 [],
                 family_name='sawtooth_settings',
-                payload=payload.SerializeToString())
-            for idx, payload in enumerate(setting_payloads)]
+                payload=payload.SerializeToString(),
+            )
+            for idx, payload in enumerate(setting_payloads)
+        ]
+
 
         self._required_settings_batch = self.make_batch(
             'required_settings', *setting_transactions)
@@ -94,7 +97,7 @@ class TestGenesisDependencyValidation(unittest.TestCase):
         return self._parser.parse_args(cmd_args)
 
     def _result_data(self, target_dir=None):
-        target_dir = target_dir if target_dir else self._temp_dir
+        target_dir = target_dir or self._temp_dir
         with open(os.path.join(target_dir, "genesis.batch"), "rb") as f:
             output = GenesisData()
             output.ParseFromString(f.read())
@@ -214,7 +217,7 @@ class TestGenesisDependencyValidation(unittest.TestCase):
         )
 
         batch_list = BatchList(batches=[batch])
-        target_path = os.path.join(self._temp_dir, batch_sig + ".batch")
+        target_path = os.path.join(self._temp_dir, f"{batch_sig}.batch")
         with open(target_path, "wb") as f:
             filename = f.name
             f.write(batch_list.SerializeToString())

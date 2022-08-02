@@ -45,11 +45,12 @@ class TestSettingsObserver(unittest.TestCase):
             block_num=85,
             state_root_hash="0987654321fedcba",
             previous_block_id=previous_block_id)
-        block = BlockWrapper(
+        return BlockWrapper(
             Block(
                 header_signature="abcdef1234567890",
-                header=block_header.SerializeToString()))
-        return block
+                header=block_header.SerializeToString(),
+            )
+        )
 
     def test_chain_update(self):
         """

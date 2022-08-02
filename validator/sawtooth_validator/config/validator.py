@@ -62,23 +62,40 @@ def load_toml_validator_config(filename):
             raw_config = fd.read()
     except IOError as e:
         raise LocalConfigurationError(
-            "Unable to load validator configuration file: {}".format(
-                str(e))) from e
+            f"Unable to load validator configuration file: {str(e)}"
+        ) from e
+
 
     toml_config = toml.loads(raw_config)
-    invalid_keys = set(toml_config.keys()).difference(
-        ['bind', 'endpoint', 'peering', 'seeds', 'peers', 'network_public_key',
-         'network_private_key', 'scheduler', 'permissions', 'roles',
-         'opentsdb_url', 'opentsdb_db', 'opentsdb_username',
-         'opentsdb_password', 'minimum_peer_connectivity',
-         'maximum_peer_connectivity', 'state_pruning_block_depth',
-         'fork_cache_keep_time',
-         'component_thread_pool_workers', 'network_thread_pool_workers',
-         'signature_thread_pool_workers'])
-    if invalid_keys:
+    if invalid_keys := set(toml_config.keys()).difference(
+        [
+            'bind',
+            'endpoint',
+            'peering',
+            'seeds',
+            'peers',
+            'network_public_key',
+            'network_private_key',
+            'scheduler',
+            'permissions',
+            'roles',
+            'opentsdb_url',
+            'opentsdb_db',
+            'opentsdb_username',
+            'opentsdb_password',
+            'minimum_peer_connectivity',
+            'maximum_peer_connectivity',
+            'state_pruning_block_depth',
+            'fork_cache_keep_time',
+            'component_thread_pool_workers',
+            'network_thread_pool_workers',
+            'signature_thread_pool_workers',
+        ]
+    ):
         raise LocalConfigurationError(
-            "Invalid keys in validator config: "
-            "{}".format(", ".join(sorted(list(invalid_keys)))))
+            f'Invalid keys in validator config: {", ".join(sorted(list(invalid_keys)))}'
+        )
+
     bind_network = None
     bind_component = None
     bind_consensus = None
@@ -99,7 +116,7 @@ def load_toml_validator_config(filename):
     if toml_config.get("network_private_key") is not None:
         network_private_key = toml_config.get("network_private_key").encode()
 
-    config = ValidatorConfig(
+    return ValidatorConfig(
         bind_network=bind_network,
         bind_component=bind_component,
         bind_consensus=bind_consensus,
@@ -117,22 +134,25 @@ def load_toml_validator_config(filename):
         opentsdb_username=toml_config.get("opentsdb_username", None),
         opentsdb_password=toml_config.get("opentsdb_password", None),
         minimum_peer_connectivity=toml_config.get(
-            "minimum_peer_connectivity", None),
+            "minimum_peer_connectivity", None
+        ),
         maximum_peer_connectivity=toml_config.get(
-            "maximum_peer_connectivity", None),
+            "maximum_peer_connectivity", None
+        ),
         state_pruning_block_depth=toml_config.get(
-            "state_pruning_block_depth", None),
-        fork_cache_keep_time=toml_config.get(
-            "fork_cache_keep_time", None),
+            "state_pruning_block_depth", None
+        ),
+        fork_cache_keep_time=toml_config.get("fork_cache_keep_time", None),
         component_thread_pool_workers=toml_config.get(
-            "component_thread_pool_workers", None),
+            "component_thread_pool_workers", None
+        ),
         network_thread_pool_workers=toml_config.get(
-            "network_thread_pool_workers", None),
+            "network_thread_pool_workers", None
+        ),
         signature_thread_pool_workers=toml_config.get(
-            "signature_thread_pool_workers", None)
+            "signature_thread_pool_workers", None
+        ),
     )
-
-    return config
 
 
 def merge_validator_config(configs):
@@ -274,9 +294,7 @@ def parse_permissions(permissions):
             else:
                 LOGGER.warning("%s does not exist. %s will not be set.",
                                policy_path, role_name)
-    if not roles:
-        return None
-    return roles
+    return roles or None
 
 
 class ValidatorConfig:
@@ -414,43 +432,7 @@ class ValidatorConfig:
 
     def __repr__(self):
         # not including  password for opentsdb
-        return (
-            "{}(bind_network={}, bind_component={}, bind_consensus={}, "
-            "endpoint={}, peering={}, seeds={}, peers={}, "
-            "network_public_key={}, network_private_key={}, "
-            "scheduler={}, permissions={}, roles={} "
-            "opentsdb_url={}, opentsdb_db={}, opentsdb_username={}, "
-            "minimum_peer_connectivity={}, maximum_peer_connectivity={}, "
-            "state_pruning_block_depth={}, "
-            "fork_cache_keep_time={})"
-            "component_thread_pool_workers={}, "
-            "network_thread_pool_workers={}, "
-            "signature_thread_pool_workers={})"
-        ).format(
-            self.__class__.__name__,
-            repr(self._bind_network),
-            repr(self._bind_component),
-            repr(self._bind_consensus),
-            repr(self._endpoint),
-            repr(self._peering),
-            repr(self._seeds),
-            repr(self._peers),
-            repr(self._network_public_key),
-            repr(self._network_private_key),
-            repr(self._scheduler),
-            repr(self._permissions),
-            repr(self._roles),
-            repr(self._opentsdb_url),
-            repr(self._opentsdb_db),
-            repr(self._opentsdb_username),
-            repr(self._minimum_peer_connectivity),
-            repr(self._maximum_peer_connectivity),
-            repr(self._state_pruning_block_depth),
-            repr(self._fork_cache_keep_time),
-            repr(self._component_thread_pool_workers),
-            repr(self._network_thread_pool_workers),
-            repr(self._signature_thread_pool_workers)
-        )
+        return f"{self.__class__.__name__}(bind_network={repr(self._bind_network)}, bind_component={repr(self._bind_component)}, bind_consensus={repr(self._bind_consensus)}, endpoint={repr(self._endpoint)}, peering={repr(self._peering)}, seeds={repr(self._seeds)}, peers={repr(self._peers)}, network_public_key={repr(self._network_public_key)}, network_private_key={repr(self._network_private_key)}, scheduler={repr(self._scheduler)}, permissions={repr(self._permissions)}, roles={repr(self._roles)} opentsdb_url={repr(self._opentsdb_url)}, opentsdb_db={repr(self._opentsdb_db)}, opentsdb_username={repr(self._opentsdb_username)}, minimum_peer_connectivity={repr(self._minimum_peer_connectivity)}, maximum_peer_connectivity={repr(self._maximum_peer_connectivity)}, state_pruning_block_depth={repr(self._state_pruning_block_depth)}, fork_cache_keep_time={repr(self._fork_cache_keep_time)})component_thread_pool_workers={repr(self._component_thread_pool_workers)}, network_thread_pool_workers={repr(self._network_thread_pool_workers)}, signature_thread_pool_workers={repr(self._signature_thread_pool_workers)})"
 
     def to_dict(self):
         return collections.OrderedDict([

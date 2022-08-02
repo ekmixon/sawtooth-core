@@ -30,6 +30,4 @@ class MockSettingsView:
         self.settings = settings
 
     def get_setting(self, setting):
-        if setting in self.settings:
-            return self.settings[setting]
-        return None
+        return self.settings[setting] if setting in self.settings else None

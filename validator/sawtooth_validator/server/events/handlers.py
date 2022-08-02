@@ -81,13 +81,11 @@ class ClientEventsSubscribeValidationHandler(Handler):
                 message_out=ack,
                 message_type=self._msg_type)
 
-        last_known_block_ids = list(request.last_known_block_ids)
-
         last_known_block_id = None
-        if last_known_block_ids:
+        if last_known_block_ids := list(request.last_known_block_ids):
             try:
                 last_known_block_id = \
-                    self._event_broadcaster.get_latest_known_block_id(
+                        self._event_broadcaster.get_latest_known_block_id(
                         last_known_block_ids)
             except NoKnownBlockError as err:
                 ack.status = ack.UNKNOWN_BLOCK

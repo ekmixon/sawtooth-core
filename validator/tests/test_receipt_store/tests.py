@@ -43,7 +43,7 @@ class ReceiptStoreTest(unittest.TestCase):
         receipt_store = TransactionReceiptStore(DictDatabase())
 
         receipts = []
-        for i in range(10):
+        for _ in range(10):
             state_changes = []
             events = []
             data = []
@@ -54,9 +54,12 @@ class ReceiptStoreTest(unittest.TestCase):
 
                 state_changes.append(
                     StateChange(
-                        address='a100000' + string,
+                        address=f'a100000{string}',
                         value=byte,
-                        type=StateChange.SET))
+                        type=StateChange.SET,
+                    )
+                )
+
                 events.append(
                     Event(
                         event_type="test",

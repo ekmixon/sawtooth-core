@@ -68,7 +68,7 @@ class ClientHandlerTestCase(unittest.TestCase):
         """Truncates the protobuf request, which will break it as long as
         the protobuf is not empty.
         """
-        return self._handle(self._serialize(**kwargs)[0:-1])
+        return self._handle(self._serialize(**kwargs)[:-1])
 
     def break_genesis(self):
         """Breaks the chain head causing certain "latest" requests to fail.

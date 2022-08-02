@@ -86,12 +86,13 @@ def main():
     ]
 
     inspect = [
-        'docker', 'inspect',
-        '-f', "{{.State.ExitCode}}",
-        "{}_{}_1".format(
-            isolation_id,
-            test_service)
+        'docker',
+        'inspect',
+        '-f',
+        "{{.State.ExitCode}}",
+        f"{isolation_id}_{test_service}_1",
     ]
+
 
     compose_dict = load_compose_file(compose_file)
     _validate_compose_dict(compose_dict, test_service, compose_file)
@@ -104,17 +105,15 @@ def main():
             compose_file, compose_dict, isolation_id)
 
     for service in compose_dict['services']:
-        scrape += [
-            '--filter', 'name={}_{}_1'.format(isolation_id, service),
-        ]
+        scrape += ['--filter', f'name={isolation_id}_{service}_1']
 
     timer = Timer(args.timeout)
 
     # Run tests
     try:
-        if not args.clean:
-            exit_status = 0
+        exit_status = 0
 
+        if not args.clean:
             if not _check_for_existing_image(test_service_image, isolation_id):
                 _build_test_service_image(test_service, compose)
 
@@ -188,9 +187,6 @@ def main():
             except BaseException:
                 LOGGER.error("Could not gather information about image used.")
 
-        else:  # cleaning
-            exit_status = 0
-
         LOGGER.info("Shutting down with: %s", str(compose_down))
 
         shutdown_success = False
@@ -241,13 +237,12 @@ def load_compose_file(compose_file):
     try:
         with open(compose_file) as fd:
             contents = fd.read()
-        compose = yaml.load(contents)
-        return compose
+        return yaml.load(contents)
 
     except OSError:
         raise RunDockerTestError(
-            "Docker compose file '{}' could not be opened. Make sure it "
-            "exists and is readable.".format(compose_file))
+            f"Docker compose file '{compose_file}' could not be opened. Make sure it exists and is readable."
+        )
 
 
 def parse_args():
@@ -291,10 +286,10 @@ def _build_test_service_image(test_service, compose):
                     cmd, stdout=subprocess.PIPE)
 
         for line in build.stdout:
-            print("build_test_image  | " + line.decode().strip())
+            print(f"build_test_image  | {line.decode().strip()}")
 
     except subprocess.CalledProcessError as err:
-        LOGGER.error("Failed to build image for {}".format(test_service))
+        LOGGER.error(f"Failed to build image for {test_service}")
         LOGGER.exception(err)
         raise
 
@@ -308,8 +303,9 @@ def _get_test_service(compose_file):
 def _get_test_service_image(compose_dict, test_service, compose_file):
     if "image" not in compose_dict['services'][test_service]:
         raise RunDockerTestError(
-            "Test service '{}' does not have an image specified: '{}'".format(
-                test_service, compose_file))
+            f"Test service '{test_service}' does not have an image specified: '{compose_file}'"
+        )
+
     else:
         return compose_dict['services'][test_service]['image'].split(":")[0]
 
@@ -317,42 +313,34 @@ def _get_test_service_image(compose_dict, test_service, compose_file):
 def _validate_compose_dict(compose_dict, test_service, compose_file):
     if test_service not in compose_dict['services']:
         raise RunDockerTestError(
-            "Test service '{}' does not exist in compose file: '{}'".format(
-                test_service, compose_file))
+            f"Test service '{test_service}' does not exist in compose file: '{compose_file}'"
+        )
 
 
 def _check_for_existing_containers(compose_file, compose_dict, isolation_id):
     containers = _get_existing_containers()
     for service in compose_dict['services'].keys():
-        container_name_to_create = "{}_{}_1".format(isolation_id, service)
+        container_name_to_create = f"{isolation_id}_{service}_1"
         for existing_container_name in containers:
             if container_name_to_create == existing_container_name:
                 raise RunDockerTestError(
-                    "The container '{}' which would be created by this test"
-                    " already exists!\nDo:\n`run_docker_test --clean {}`\nto"
-                    " remove the container, or use docker manually.".format(
-                        container_name_to_create, compose_file
-                    )
+                    f"The container '{container_name_to_create}' which would be created by this test already exists!\nDo:\n`run_docker_test --clean {compose_file}`\nto remove the container, or use docker manually."
                 )
 
 
 def _check_for_existing_image(test_service, isolation_id):
     images = _get_existing_images()
-    image_to_create = '{}:{}'.format(test_service, isolation_id)
+    image_to_create = f'{test_service}:{isolation_id}'
     if image_to_create in images:
         return True
 
 
 def _check_for_existing_network(isolation_id, compose_file):
     networks = _get_existing_networks()
-    network_to_create = '{}_default'.format(isolation_id)
+    network_to_create = f'{isolation_id}_default'
     if network_to_create in networks:
         raise RunDockerTestError(
-            "The network '{}' which would be created by this test already"
-            " exists!\nDo:\n`run_docker_test --clean {}`\nto remove the"
-            " network, or use docker manually.".format(
-                network_to_create, compose_file
-            )
+            f"The network '{network_to_create}' which would be created by this test already exists!\nDo:\n`run_docker_test --clean {compose_file}`\nto remove the network, or use docker manually."
         )
 
 
@@ -474,13 +462,12 @@ def _get_compose_file(compose_file):
         compose_file = os.path.join(_get_compose_dir(), compose_file)
     if not os.path.exists(compose_file):
         # If not, try appending .yaml
-        compose_file = os.path.join(
-            _get_compose_dir(),
-            "{}.yaml".format(compose_file)
-        )
+        compose_file = os.path.join(_get_compose_dir(), f"{compose_file}.yaml")
     if not os.path.exists(compose_file):
         raise RunDockerTestError(
-            "Docker compose file '{}' does not exist.".format(compose_file))
+            f"Docker compose file '{compose_file}' does not exist."
+        )
+
 
     return compose_file
 

@@ -168,7 +168,7 @@ class Dispatcher(InstrumentedThread):
 
     def add_handler(self, message_type, handler, executor, priority=None):
         if not isinstance(handler, Handler):
-            raise TypeError("%s is not a Handler subclass" % handler)
+            raise TypeError(f"{handler} is not a Handler subclass")
         if message_type not in self._msg_type_handlers:
             self._msg_type_handlers[message_type] = [
                 _HandlerManager(executor, handler)]

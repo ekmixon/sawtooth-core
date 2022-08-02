@@ -38,10 +38,7 @@ def is_valid_block(block):
                      block.header_signature)
         return False
 
-    if not all(map(is_valid_batch, block.batches)):
-        return False
-
-    return True
+    return all(map(is_valid_batch, block.batches))
 
 
 def is_valid_batch(batch):
@@ -161,7 +158,8 @@ class BatchListStructureVerifier(Handler):
                 LOGGER.debug("TRACE %s: %s", batch.header_signature,
                              self.__class__.__name__)
 
-        if not all(map(is_valid_batch, message_content.batches)):
-            return make_response(response_proto.INVALID_BATCH)
-
-        return HandlerResult(status=HandlerStatus.PASS)
+        return (
+            HandlerResult(status=HandlerStatus.PASS)
+            if all(map(is_valid_batch, message_content.batches))
+            else make_response(response_proto.INVALID_BATCH)
+        )

@@ -39,15 +39,15 @@ class NativeLmdbDatabase(OwnedPointer):
         if res == ErrorCode.NullPointerProvided:
             raise TypeError("Path cannot be null")
         if res == ErrorCode.InvalidFilePath:
-            raise TypeError("Invalid file path {}".format(path))
+            raise TypeError(f"Invalid file path {path}")
         if res == ErrorCode.InvalidIndexString:
-            raise TypeError("Invalid index string {}".format(indexes))
+            raise TypeError(f"Invalid index string {indexes}")
         if res == ErrorCode.InitializeContextError:
             raise TypeError("Unable to initialize LMDB Context")
         if res == ErrorCode.InitializeDatabaseError:
             raise TypeError("Unable to initialize LMDB Database")
 
-        raise TypeError("Unknown error occurred: {}".format(res.error))
+        raise TypeError(f"Unknown error occurred: {res.error}")
 
 
 class ErrorCode(IntEnum):

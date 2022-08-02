@@ -39,7 +39,7 @@ class LMDBNoLockDatabase(database.Database):
         """
         super().__init__()
 
-        create = bool(flag == 'c')
+        create = flag == 'c'
 
         if flag == 'n':
             if os.path.isfile(filename):

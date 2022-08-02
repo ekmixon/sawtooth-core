@@ -140,10 +140,7 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None,
     load_cli_config(args)
 
     if with_loggers is True:
-        if args.verbose is None:
-            verbose_level = 0
-        else:
-            verbose_level = args.verbose
+        verbose_level = 0 if args.verbose is None else args.verbose
         setup_loggers(verbose_level=verbose_level)
 
     if args.command == 'keygen':
@@ -165,7 +162,7 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None,
     elif args.command == 'status':
         do_status(args)
     else:
-        raise CliException("invalid command: {}".format(args.command))
+        raise CliException(f"invalid command: {args.command}")
 
 
 def main_wrapper():
@@ -173,7 +170,7 @@ def main_wrapper():
     try:
         main()
     except CliException as e:
-        print("Error: {}".format(e), file=sys.stderr)
+        print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:
         pass

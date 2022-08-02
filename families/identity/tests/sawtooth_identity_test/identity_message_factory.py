@@ -197,13 +197,11 @@ class IdentityMessageFactory:
             entry = Setting.Entry(
                 key="sawtooth.identity.allowed_keys",
                 value=self.public_key)
-            data = Setting(entries=[entry]).SerializeToString()
         else:
             entry = Setting.Entry(
                 key="sawtooth.identity.allowed_keys",
                 value="")
-            data = Setting(entries=[entry]).SerializeToString()
-
+        data = Setting(entries=[entry]).SerializeToString()
         return self._factory.create_get_response({key: data})
 
     def create_add_event_request(self, key):

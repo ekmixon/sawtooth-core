@@ -60,16 +60,14 @@ class ReceiptEventExtractor(EventExtractor):
         events = []
         for receipt in self._receipts:
             for event in receipt.events:
-                for subscription in subscriptions:
-                    if event in subscription:
-                        events.append(event)
+                events.extend(event for subscription in subscriptions if event in subscription)
         return events
 
     def _make_state_delta_events(self, subscriptions):
-        gen = False
-        for subscription in subscriptions:
-            if subscription.event_type == "sawtooth/state-delta":
-                gen = True
+        gen = any(
+            subscription.event_type == "sawtooth/state-delta"
+            for subscription in subscriptions
+        )
 
         if not gen:
             return []
@@ -94,9 +92,7 @@ class ReceiptEventExtractor(EventExtractor):
             attributes=attributes,
             data=state_change_list.SerializeToString())
 
-        for subscription in subscriptions:
-            if event in subscription:
-                return [event]
-
-        # Event not in subscriptions
-        return []
+        return next(
+            ([event] for subscription in subscriptions if event in subscription),
+            [],
+        )

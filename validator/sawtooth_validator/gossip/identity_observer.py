@@ -52,8 +52,7 @@ class IdentityObserver(ChainObserver):
             EventSubscription(event_type="identity/update")])
 
         for event in block_events:
-            forked = self._handle_block_commit(event)
-            if forked:
+            if forked := self._handle_block_commit(event):
                 return
 
         for event in receipt_events:

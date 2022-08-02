@@ -40,7 +40,8 @@ class TestBatchSubmitPreprocessor(ClientHandlerTestCase):
 
         request = client_batch_submit_pb2.ClientBatchSubmitRequest(
             batches=[make_mock_batch('new')]
-        ).SerializeToString()[0:-1]
+        ).SerializeToString()[:-1]
+
 
         result = handlers.client_batch_submit_request_preprocessor(request)
 

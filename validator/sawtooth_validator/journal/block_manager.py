@@ -155,7 +155,7 @@ def _check_error(res):
     elif res == ErrorCode.InvalidInputString:
         raise TypeError("Invalid block store name provided")
     else:
-        raise Exception("There was an unknown error: {}".format(res))
+        raise Exception(f"There was an unknown error: {res}")
 
 
 class _GetBlockIterator(ffi.BlockIterator):
@@ -169,11 +169,13 @@ class _GetBlockIterator(ffi.BlockIterator):
         for i, block_id in enumerate(block_ids):
             c_block_ids[i] = ctypes.c_char_p(block_id.encode())
 
-        _libexec("{}_new".format(self.name),
-                 block_manager_ptr,
-                 c_block_ids,
-                 ctypes.c_size_t(len(block_ids)),
-                 ctypes.byref(self.pointer))
+        _libexec(
+            f"{self.name}_new",
+            block_manager_ptr,
+            c_block_ids,
+            ctypes.c_size_t(len(block_ids)),
+            ctypes.byref(self.pointer),
+        )
 
 
 class _BranchDiffIterator(ffi.BlockIterator):
@@ -186,11 +188,13 @@ class _BranchDiffIterator(ffi.BlockIterator):
         c_tip = ctypes.c_char_p(tip.encode())
         c_exclude = ctypes.c_char_p(exclude.encode())
 
-        _libexec("{}_new".format(self.name),
-                 block_manager_ptr,
-                 c_tip,
-                 c_exclude,
-                 ctypes.byref(self.pointer))
+        _libexec(
+            f"{self.name}_new",
+            block_manager_ptr,
+            c_tip,
+            c_exclude,
+            ctypes.byref(self.pointer),
+        )
 
 
 class _BranchIterator(ffi.BlockIterator):
@@ -202,7 +206,9 @@ class _BranchIterator(ffi.BlockIterator):
 
         c_tip = ctypes.c_char_p(tip.encode())
 
-        _libexec("{}_new".format(self.name),
-                 block_manager_ptr,
-                 c_tip,
-                 ctypes.byref(self.pointer))
+        _libexec(
+            f"{self.name}_new",
+            block_manager_ptr,
+            c_tip,
+            ctypes.byref(self.pointer),
+        )

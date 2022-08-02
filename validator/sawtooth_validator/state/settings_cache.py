@@ -49,8 +49,7 @@ class SettingsObserver(ChainObserver):
             EventSubscription(event_type="setting/update")])
 
         for event in block_events:
-            forked = self._handle_block_commit(event)
-            if forked:
+            if forked := self._handle_block_commit(event):
                 return
 
         for event in receipt_events:
@@ -106,9 +105,7 @@ class SettingsCache():
             self.update_view(state_root_func())
             value = self._settings_view.get_setting(key)
             self._cache[key] = value
-        if value is None:
-            return default_value
-        return value
+        return default_value if value is None else value
 
     def forked(self):
         self._cache = {}

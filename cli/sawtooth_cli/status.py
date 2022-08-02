@@ -51,14 +51,14 @@ def do_status(args):
     if args.subcommand == 'show':
         do_status_show(args)
     else:
-        raise CliException('Invalid command: {}'.format(args.subcommand))
+        raise CliException(f'Invalid command: {args.subcommand}')
 
 
 def do_status_show(args):
     rest_client = RestClient(base_url=args.url)
     status = rest_client.get_status()
 
-    if args.format == 'csv' or args.format == 'default':
+    if args.format in ['csv', 'default']:
         print(status)
 
     elif args.format == 'json':

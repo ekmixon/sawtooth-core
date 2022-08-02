@@ -37,16 +37,10 @@ def add_genesis_parser(subparsers, parent_parser):
         help='Creates the genesis.batch file for initializing the validator',
         description='Generates the genesis.batch file for '
         'initializing the validator.',
-        epilog='This command generates a serialized GenesisData protobuf '
-        'message and stores it in the genesis.batch file. One or more input '
-        'files contain serialized BatchList protobuf messages to add to the '
-        'GenesisData. The output shows the location of this file. By default, '
-        'the genesis.batch file is stored in /var/lib/sawtooth. If '
-        '$SAWTOOTH_HOME is set, the location is '
-        '$SAWTOOTH_HOME/data/genesis.batch. Use the --output option to change '
-        'the name of the file. The following settings must be present in the '
-        'input batches:\n{}\n'.format(REQUIRED_SETTINGS),
-        parents=[parent_parser])
+        epilog=f'This command generates a serialized GenesisData protobuf message and stores it in the genesis.batch file. One or more input files contain serialized BatchList protobuf messages to add to the GenesisData. The output shows the location of this file. By default, the genesis.batch file is stored in /var/lib/sawtooth. If $SAWTOOTH_HOME is set, the location is $SAWTOOTH_HOME/data/genesis.batch. Use the --output option to change the name of the file. The following settings must be present in the input batches:\n{REQUIRED_SETTINGS}\n',
+        parents=[parent_parser],
+    )
+
 
     parser.add_argument(
         '-o', '--output',
@@ -78,19 +72,17 @@ def do_genesis(args, data_dir=None):
         data_dir = get_data_dir()
 
     if not os.path.exists(data_dir):
-        raise CliException(
-            "Data directory does not exist: {}".format(data_dir))
+        raise CliException(f"Data directory does not exist: {data_dir}")
 
     genesis_batches = []
     for input_file in args.input_file:
-        print('Processing {}...'.format(input_file))
+        print(f'Processing {input_file}...')
         input_data = BatchList()
         try:
             with open(input_file, 'rb') as in_file:
                 input_data.ParseFromString(in_file.read())
         except:
-            raise CliException(
-                'Unable to read {}'.format(input_file)) from CliException
+            raise CliException(f'Unable to read {input_file}') from CliException
 
         genesis_batches += input_data.batches
 
@@ -98,12 +90,8 @@ def do_genesis(args, data_dir=None):
     if not args.ignore_required_settings:
         _check_required_settings(genesis_batches)
 
-    if args.output:
-        genesis_file = args.output
-    else:
-        genesis_file = os.path.join(data_dir, 'genesis.batch')
-
-    print('Generating {}'.format(genesis_file))
+    genesis_file = args.output or os.path.join(data_dir, 'genesis.batch')
+    print(f'Generating {genesis_file}')
     output_data = GenesisData(batches=genesis_batches)
     with open(genesis_file, 'wb') as out_file:
         out_file.write(output_data.SerializeToString())
@@ -122,14 +110,15 @@ def _validate_depedencies(batches):
             txn_header.ParseFromString(txn.header)
 
             if txn_header.dependencies:
-                unsatisfied_deps = [
-                    id for id in txn_header.dependencies
+                if unsatisfied_deps := [
+                    id
+                    for id in txn_header.dependencies
                     if id not in transaction_ids
-                ]
-                if unsatisfied_deps:
+                ]:
                     raise CliException(
-                        'Unsatisfied dependency in given transactions:'
-                        ' {}'.format(unsatisfied_deps))
+                        f'Unsatisfied dependency in given transactions: {unsatisfied_deps}'
+                    )
+
 
             transaction_ids.add(txn.header_signature)
 
@@ -152,5 +141,5 @@ def _check_required_settings(batches):
 
     if required_settings:
         raise CliException(
-            'The following setting(s) are required at genesis, but were not '
-            'included in the genesis batches: {}'.format(required_settings))
+            f'The following setting(s) are required at genesis, but were not included in the genesis batches: {required_settings}'
+        )

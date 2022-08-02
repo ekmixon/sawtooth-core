@@ -50,11 +50,9 @@ class Library:
             lib_prefix = lib_prefix_mapping[os_name]
             lib_suffix = lib_suffix_mapping[os_name]
         except KeyError:
-            raise OSError(
-                "OS isn't supported: {}".format(os_name)) from KeyError
+            raise OSError(f"OS isn't supported: {os_name}") from KeyError
 
-        library_path = "{}{}sawtooth_validator{}".format(
-            lib_location, lib_prefix, lib_suffix)
+        library_path = f"{lib_location}{lib_prefix}sawtooth_validator{lib_suffix}"
 
         LOGGER.debug("loading library %s", library_path)
 
@@ -127,11 +125,7 @@ class OwnedPointer(metaclass=ABCMeta):
             initialized_ptr (ctypes.c_void_p:optional): a preinitialized
                 pointer to the native memory
         """
-        if initialized_ptr is not None:
-            self._ptr = initialized_ptr
-        else:
-            self._ptr = ctypes.c_void_p()
-
+        self._ptr = ctypes.c_void_p() if initialized_ptr is None else initialized_ptr
         self._drop_ffi_fn = drop_ffi_call_fn
 
     def drop(self):
@@ -178,7 +172,7 @@ def python_to_sender_callback(sender):
 class BlockIterator(OwnedPointer):
 
     def __init__(self, check_return_code, initialized_ptr=None):
-        super().__init__("{}_drop".format(self.name), initialized_ptr)
+        super().__init__(f"{self.name}_drop", initialized_ptr)
         self._check_return_code = check_return_code
 
     def __iter__(self):
@@ -192,11 +186,14 @@ class BlockIterator(OwnedPointer):
 
         self._check_return_code(
             LIBRARY.call(
-                "{}_next".format(self.name),
+                f"{self.name}_next",
                 self.pointer,
                 ctypes.byref(vec_ptr),
                 ctypes.byref(vec_len),
-                ctypes.byref(vec_cap)))
+                ctypes.byref(vec_cap),
+            )
+        )
+
 
         # Check if NULL
         if not vec_ptr:

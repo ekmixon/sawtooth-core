@@ -31,8 +31,7 @@ class SimpleBlock:
         )
 
     def __str__(self):
-        return "(NUM:{}, ID:{}, P:{})".format(
-            self.num, self.ident[:8], self.previous[:8])
+        return f"(NUM:{self.num}, ID:{self.ident[:8]}, P:{self.previous[:8]})"
 
 
 class ForkGraphNode:

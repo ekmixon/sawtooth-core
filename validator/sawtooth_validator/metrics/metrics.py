@@ -159,10 +159,7 @@ class MetricsCollector:
         if tags is not None:
             tag_list.extend(tags.items())
         tag_list.extend(self._base_tags)
-        return ".".join(identifier) + "," + ",".join(
-            "{}={}".format(k, v)
-            for k, v in tag_list
-        )
+        return (".".join(identifier) + "," + ",".join(f"{k}={v}" for k, v in tag_list))
 
 
 class MetricsCollectorHandle:

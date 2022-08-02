@@ -84,8 +84,7 @@ class StateListTests(BaseApiTest):
             state_root='beef', paging=controls)
 
         self.assert_has_valid_head(response, ID_C)
-        self.assert_has_valid_link(
-            response, '/state?head={}&start=a&limit=100'.format(ID_C))
+        self.assert_has_valid_link(response, f'/state?head={ID_C}&start=a&limit=100')
         self.assert_has_valid_paging(response, paging)
         self.assert_has_valid_data_list(response, 3)
         self.assert_entries_match(entries, response['data'])
@@ -165,14 +164,13 @@ class StateListTests(BaseApiTest):
                 header=block_pb2.BlockHeader(
                     state_root_hash='beef').SerializeToString()))
 
-        response = await self.get_assert_200('/state?head={}'.format(ID_B))
+        response = await self.get_assert_200(f'/state?head={ID_B}')
         controls = Mocks.make_paging_controls()
         self.connection.assert_valid_request_sent(
             state_root='beef', paging=controls)
 
         self.assert_has_valid_head(response, ID_B)
-        self.assert_has_valid_link(
-            response, '/state?head={}&start=a&limit=100'.format(ID_B))
+        self.assert_has_valid_link(response, f'/state?head={ID_B}&start=a&limit=100')
         self.assert_has_valid_paging(response, paging)
         self.assert_has_valid_data_list(response, 2)
         self.assert_entries_match(entries, response['data'])
@@ -192,8 +190,7 @@ class StateListTests(BaseApiTest):
         self.connection.preset_response(
             proto=client_block_pb2.ClientBlockGetResponse,
             block=block_pb2.Block())
-        response = await self.get_assert_status('/state?head={}'.format(ID_D),
-                                                404)
+        response = await self.get_assert_status(f'/state?head={ID_D}', 404)
 
         self.assert_has_valid_error(response, 50)
 
@@ -237,8 +234,9 @@ class StateListTests(BaseApiTest):
 
         self.assert_has_valid_head(response, ID_C)
         self.assert_has_valid_link(
-            response,
-            '/state?head={}&start=c&limit=100&address=c'.format(ID_C))
+            response, f'/state?head={ID_C}&start=c&limit=100&address=c'
+        )
+
         self.assert_has_valid_paging(response, paging)
         self.assert_has_valid_data_list(response, 1)
         self.assert_entries_match(entries, response['data'])
@@ -274,8 +272,9 @@ class StateListTests(BaseApiTest):
 
         self.assert_has_valid_head(response, ID_C)
         self.assert_has_valid_link(
-            response,
-            '/state?head={}&start=c&limit=100&address=bad'.format(ID_C))
+            response, f'/state?head={ID_C}&start=c&limit=100&address=bad'
+        )
+
         self.assert_has_valid_paging(response, paging)
         self.assert_has_valid_data_list(response, 0)
 
@@ -313,8 +312,7 @@ class StateListTests(BaseApiTest):
                 header=block_pb2.BlockHeader(
                     state_root_hash='beef').SerializeToString()))
 
-        response = await self.get_assert_200(
-            '/state?address=a&head={}'.format(ID_B))
+        response = await self.get_assert_200(f'/state?address=a&head={ID_B}')
         self.connection.assert_valid_request_sent(
             state_root='beef',
             address='a',
@@ -322,8 +320,9 @@ class StateListTests(BaseApiTest):
 
         self.assert_has_valid_head(response, ID_B)
         self.assert_has_valid_link(
-            response,
-            '/state?head={}&start=a&limit=100&address=a'.format(ID_B))
+            response, f'/state?head={ID_B}&start=a&limit=100&address=a'
+        )
+
         self.assert_has_valid_paging(response, paging)
         self.assert_has_valid_data_list(response, 1)
         self.assert_entries_match(entries, response['data'])
@@ -366,10 +365,11 @@ class StateListTests(BaseApiTest):
             state_root='beef', paging=controls)
 
         self.assert_has_valid_head(response, ID_D)
-        self.assert_has_valid_link(
-            response, '/state?head={}&start=c&limit=1'.format(ID_D))
+        self.assert_has_valid_link(response, f'/state?head={ID_D}&start=c&limit=1')
         self.assert_has_valid_paging(
-            response, paging, '/state?head={}&start=b&limit=1'.format(ID_D))
+            response, paging, f'/state?head={ID_D}&start=b&limit=1'
+        )
+
         self.assert_has_valid_data_list(response, 1)
         self.assert_entries_match(entries, response['data'])
 
@@ -442,10 +442,11 @@ class StateListTests(BaseApiTest):
             state_root='beef', paging=controls)
 
         self.assert_has_valid_head(response, ID_D)
-        self.assert_has_valid_link(
-            response, '/state?head={}&start=d&limit=2'.format(ID_D))
+        self.assert_has_valid_link(response, f'/state?head={ID_D}&start=d&limit=2')
         self.assert_has_valid_paging(
-            response, paging, '/state?head={}&start=b&limit=2'.format(ID_D))
+            response, paging, f'/state?head={ID_D}&start=b&limit=2'
+        )
+
         self.assert_has_valid_data_list(response, 2)
         self.assert_entries_match(entries, response['data'])
 
@@ -487,8 +488,7 @@ class StateListTests(BaseApiTest):
             state_root='beef', paging=controls)
 
         self.assert_has_valid_head(response, ID_D)
-        self.assert_has_valid_link(
-            response, '/state?head={}&start=b&limit=100'.format(ID_D))
+        self.assert_has_valid_link(response, f'/state?head={ID_D}&start=b&limit=100')
         self.assert_has_valid_paging(response, paging)
         self.assert_has_valid_data_list(response, 2)
         self.assert_entries_match(entries, response['data'])
@@ -531,8 +531,7 @@ class StateListTests(BaseApiTest):
             state_root='beef', paging=controls)
 
         self.assert_has_valid_head(response, ID_D)
-        self.assert_has_valid_link(
-            response, '/state?head={}&start=c&limit=5'.format(ID_D))
+        self.assert_has_valid_link(response, f'/state?head={ID_D}&start=c&limit=5')
         self.assert_has_valid_paging(response, paging)
         self.assert_has_valid_data_list(response, 3)
         self.assert_entries_match(entries, response['data'])
@@ -583,7 +582,9 @@ class StateListTests(BaseApiTest):
 
         self.assert_has_valid_head(response, ID_C)
         self.assert_has_valid_link(
-            response, '/state?head={}&start=c&limit=100&reverse'.format(ID_C))
+            response, f'/state?head={ID_C}&start=c&limit=100&reverse'
+        )
+
         self.assert_has_valid_paging(response, paging)
         self.assert_has_valid_data_list(response, 3)
         self.assert_entries_match(entries, response['data'])
@@ -631,7 +632,7 @@ class StateGetTests(BaseApiTest):
             state_root='beef', address='a')
 
         self.assert_has_valid_head(response, ID_C)
-        self.assert_has_valid_link(response, '/state/a?head={}'.format(ID_C))
+        self.assert_has_valid_link(response, f'/state/a?head={ID_C}')
         self.assertIn('data', response)
 
         data = response['data']
@@ -723,12 +724,12 @@ class StateGetTests(BaseApiTest):
                 header=block_pb2.BlockHeader(
                     state_root_hash='beef').SerializeToString()))
 
-        response = await self.get_assert_200('/state/b?head={}'.format(ID_B))
+        response = await self.get_assert_200(f'/state/b?head={ID_B}')
         self.connection.assert_valid_request_sent(
             state_root='beef', address='b')
 
         self.assert_has_valid_head(response, ID_B)
-        self.assert_has_valid_link(response, '/state/b?head={}'.format(ID_B))
+        self.assert_has_valid_link(response, f'/state/b?head={ID_B}')
         self.assertIn('data', response)
 
         data = response['data']
@@ -750,7 +751,6 @@ class StateGetTests(BaseApiTest):
         self.connection.preset_response(
             proto=client_block_pb2.ClientBlockGetResponse,
             block=block_pb2.Block())
-        response = await self.get_assert_status(
-            '/state/b?head={}'.format(ID_D), 404)
+        response = await self.get_assert_status(f'/state/b?head={ID_D}', 404)
 
         self.assert_has_valid_error(response, 50)

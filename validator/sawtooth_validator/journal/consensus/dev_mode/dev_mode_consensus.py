@@ -195,8 +195,7 @@ class ForkResolver(ForkResolverInterface):
         m.update(signer_public_key.encode())
         m.update(header_signature.encode())
         digest = m.hexdigest()
-        number = int(digest, 16)
-        return number
+        return int(digest, 16)
 
     def compare_forks(self, cur_fork_head, new_fork_head):
         """The longest chain is selected. If they are equal, then the hash
@@ -213,10 +212,10 @@ class ForkResolver(ForkResolverInterface):
         # If the new fork head is not DevMode consensus, bail out.  This should
         # never happen, but we need to protect against it.
         if new_fork_head.consensus != b"Devmode":
-            raise \
-                TypeError(
-                    'New fork head {} is not a DevMode block'.format(
-                        new_fork_head.identifier[:8]))
+            raise TypeError(
+                f'New fork head {new_fork_head.identifier[:8]} is not a DevMode block'
+            )
+
 
         # If the current fork head is not DevMode consensus, check the new fork
         # head to see if its immediate predecessor is the current fork head. If
@@ -231,24 +230,19 @@ class ForkResolver(ForkResolverInterface):
                     new_fork_head.identifier[:8])
                 return True
 
-            raise \
-                TypeError(
-                    'Trying to compare a DevMode block {} to a non-DevMode '
-                    'block {} that is not the direct predecessor'.format(
-                        new_fork_head.identifier[:8],
-                        cur_fork_head.identifier[:8]))
+            raise TypeError(
+                f'Trying to compare a DevMode block {new_fork_head.identifier[:8]} to a non-DevMode block {cur_fork_head.identifier[:8]} that is not the direct predecessor'
+            )
 
-        if new_fork_head.block_num == cur_fork_head.block_num:
-            cur_fork_hash = self.hash_signer_public_key(
-                cur_fork_head.header.signer_public_key,
-                cur_fork_head.header.previous_block_id)
-            new_fork_hash = self.hash_signer_public_key(
-                new_fork_head.header.signer_public_key,
-                new_fork_head.header.previous_block_id)
 
-            result = new_fork_hash < cur_fork_hash
+        if new_fork_head.block_num != cur_fork_head.block_num:
+            return new_fork_head.block_num > cur_fork_head.block_num
 
-        else:
-            result = new_fork_head.block_num > cur_fork_head.block_num
+        cur_fork_hash = self.hash_signer_public_key(
+            cur_fork_head.header.signer_public_key,
+            cur_fork_head.header.previous_block_id)
+        new_fork_hash = self.hash_signer_public_key(
+            new_fork_head.header.signer_public_key,
+            new_fork_head.header.previous_block_id)
 
-        return result
+        return new_fork_hash < cur_fork_hash

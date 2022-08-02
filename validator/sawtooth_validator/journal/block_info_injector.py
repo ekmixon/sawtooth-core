@@ -14,8 +14,8 @@
 # ------------------------------------------------------------------------------
 
 NAMESPACE = '00b10c'
-BLOCK_INFO_NAMESPACE = NAMESPACE + '00'
-CONFIG_ADDRESS = NAMESPACE + '01' + '0' * 62
+BLOCK_INFO_NAMESPACE = f'{NAMESPACE}00'
+CONFIG_ADDRESS = f'{NAMESPACE}01' + '0' * 62
 
 
 def create_block_address(block_num):

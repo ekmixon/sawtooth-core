@@ -106,7 +106,7 @@ class TestSawtoothMerkleTrie(unittest.TestCase):
             }
             for key, hashed in random.sample(key_hashes.items(), 50)
         }
-        values.update(set_items)
+        values |= set_items
         delete_items = set(random.sample(list(key_hashes.values()), 50))
 
         # make sure there are no sets and deletes of the same key

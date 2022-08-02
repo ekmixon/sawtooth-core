@@ -36,9 +36,9 @@ class TransactionListTests(BaseApiTest):
             client_transaction_pb2.ClientTransactionListResponse)
 
         handlers = self.build_handlers(self.loop, self.connection)
-        app = self.build_app(self.loop, '/transactions',
-                             handlers.list_transactions)
-        return app
+        return self.build_app(
+            self.loop, '/transactions', handlers.list_transactions
+        )
 
     @unittest_run_loop
     async def test_txn_list(self):
@@ -140,8 +140,7 @@ class TransactionListTests(BaseApiTest):
             paging=paging,
             transactions=Mocks.make_txns(ID_B, ID_A))
 
-        response = await self.get_assert_200(
-            '/transactions?head={}'.format(ID_B))
+        response = await self.get_assert_200(f'/transactions?head={ID_B}')
         controls = Mocks.make_paging_controls()
         self.connection.assert_valid_request_sent(
             head_id=ID_B, paging=controls)
@@ -166,8 +165,7 @@ class TransactionListTests(BaseApiTest):
             - an error property with a code of 50
         """
         self.connection.preset_response(self.status.NO_ROOT)
-        response = await self.get_assert_status(
-            '/transactions?head={}'.format(ID_D), 404)
+        response = await self.get_assert_status(f'/transactions?head={ID_D}', 404)
 
         self.assert_has_valid_error(response, 50)
 
@@ -199,15 +197,14 @@ class TransactionListTests(BaseApiTest):
         self.connection.preset_response(
             head_id=ID_C, paging=paging, transactions=transactions)
 
-        response = await self.get_assert_200('/transactions?id={},{}'.format(
-            ID_A, ID_C))
+        response = await self.get_assert_200(f'/transactions?id={ID_A},{ID_C}')
         controls = Mocks.make_paging_controls()
         self.connection.assert_valid_request_sent(
             transaction_ids=[ID_A, ID_C], paging=controls)
 
         self.assert_has_valid_head(response, ID_C)
         link =\
-            '/transactions?head={ID_C}&start={ID_C}&limit=100&id={ID_A},{ID_C}'
+                '/transactions?head={ID_C}&start={ID_C}&limit=100&id={ID_A},{ID_C}'
 
         self.assert_has_valid_link(
             response,
@@ -236,12 +233,11 @@ class TransactionListTests(BaseApiTest):
         paging = Mocks.make_paging_response("", ID_C, DEFAULT_LIMIT)
         self.connection.preset_response(
             self.status.NO_RESOURCE, head_id=ID_C, paging=paging)
-        response = await self.get_assert_200('/transactions?id={},{}'.format(
-            ID_B, ID_D))
+        response = await self.get_assert_200(f'/transactions?id={ID_B},{ID_D}')
 
         self.assert_has_valid_head(response, ID_C)
         link =\
-            '/transactions?head={ID_C}&start={ID_C}&limit=100&id={ID_B},{ID_D}'
+                '/transactions?head={ID_C}&start={ID_C}&limit=100&id={ID_B},{ID_D}'
 
         self.assert_has_valid_link(
             response,
@@ -278,8 +274,7 @@ class TransactionListTests(BaseApiTest):
         self.connection.preset_response(
             head_id=ID_B, paging=paging, transactions=Mocks.make_txns(ID_A))
 
-        response = await self.get_assert_200(
-            '/transactions?id={}&head={}'.format(ID_A, ID_B))
+        response = await self.get_assert_200(f'/transactions?id={ID_A}&head={ID_B}')
         controls = Mocks.make_paging_controls()
         self.connection.assert_valid_request_sent(
             head_id=ID_B, transaction_ids=[ID_A], paging=controls)
@@ -358,8 +353,9 @@ class TransactionListTests(BaseApiTest):
             response, '/transactions?head={ID_D}&start={ID_D}&limit=2'.format(
                 ID_D=ID_D))
         self.assert_has_valid_paging(
-            response, paging, '/transactions?head={}&start={}&limit=2'.format(
-                ID_D, ID_B))
+            response, paging, f'/transactions?head={ID_D}&start={ID_B}&limit=2'
+        )
+
         self.assert_has_valid_data_list(response, 2)
         self.assert_txns_well_formed(response['data'], ID_D, ID_C)
 
@@ -430,15 +426,15 @@ class TransactionListTests(BaseApiTest):
             paging=paging,
             transactions=Mocks.make_txns(ID_C, ID_B, ID_A))
 
-        response = await self.get_assert_200(
-            '/transactions?start={}&limit=5'.format(ID_C))
+        response = await self.get_assert_200(f'/transactions?start={ID_C}&limit=5')
         controls = Mocks.make_paging_controls(5, start=ID_C)
         self.connection.assert_valid_request_sent(paging=controls)
 
         self.assert_has_valid_head(response, ID_D)
         self.assert_has_valid_link(
-            response, '/transactions?head={}&start={}&limit=5'.format(
-                ID_D, ID_C))
+            response, f'/transactions?head={ID_D}&start={ID_C}&limit=5'
+        )
+
         self.assert_has_valid_paging(response, paging)
         self.assert_has_valid_data_list(response, 3)
         self.assert_txns_well_formed(response['data'], ID_C, ID_B, ID_A)
@@ -519,11 +515,11 @@ class TransactionGetTests(BaseApiTest):
         """
         self.connection.preset_response(transaction=Mocks.make_txns(ID_B)[0])
 
-        response = await self.get_assert_200('/transactions/{}'.format(ID_B))
+        response = await self.get_assert_200(f'/transactions/{ID_B}')
         self.connection.assert_valid_request_sent(transaction_id=ID_B)
 
         self.assertNotIn('head', response)
-        self.assert_has_valid_link(response, '/transactions/{}'.format(ID_B))
+        self.assert_has_valid_link(response, f'/transactions/{ID_B}')
         self.assertIn('data', response)
         self.assert_txns_well_formed(response['data'], ID_B)
 
@@ -540,8 +536,7 @@ class TransactionGetTests(BaseApiTest):
             - an error property with a code of 10
         """
         self.connection.preset_response(self.status.INTERNAL_ERROR)
-        response = await self.get_assert_status(
-            '/transactions/{}'.format(ID_B), 500)
+        response = await self.get_assert_status(f'/transactions/{ID_B}', 500)
 
         self.assert_has_valid_error(response, 10)
 
@@ -558,7 +553,6 @@ class TransactionGetTests(BaseApiTest):
             - an error property with a code of 72
         """
         self.connection.preset_response(self.status.NO_RESOURCE)
-        response = await self.get_assert_status(
-            '/transactions/{}'.format(ID_D), 404)
+        response = await self.get_assert_status(f'/transactions/{ID_D}', 404)
 
         self.assert_has_valid_error(response, 72)

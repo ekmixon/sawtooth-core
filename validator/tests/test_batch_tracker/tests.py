@@ -50,7 +50,6 @@ class BatchTrackerTest(unittest.TestCase):
 
 def make_batch(batch_id, txn_id):
     transaction = transaction_pb2.Transaction(header_signature=txn_id)
-    batch = batch_pb2.Batch(
-        header_signature=batch_id, transactions=[transaction])
-
-    return batch
+    return batch_pb2.Batch(
+        header_signature=batch_id, transactions=[transaction]
+    )

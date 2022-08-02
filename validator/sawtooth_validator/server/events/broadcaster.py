@@ -119,9 +119,11 @@ class EventBroadcaster(ChainObserver):
             # known block
             for block in self._block_store.get_predecessor_iter():
                 # All the blocks if NULL_BLOCK_IDENTIFIER
-                if last_known_block_id != NULL_BLOCK_IDENTIFIER:
-                    if block.identifier == last_known_block_id:
-                        break
+                if (
+                    last_known_block_id != NULL_BLOCK_IDENTIFIER
+                    and block.identifier == last_known_block_id
+                ):
+                    break
                 catchup_up_blocks.append(block.identifier)
 
         return list(reversed(catchup_up_blocks))
@@ -237,8 +239,7 @@ class EventBroadcaster(ChainObserver):
 
         events = []
         for extractor in extractors:
-            extracted_events = extractor.extract(subscriptions)
-            if extracted_events:
+            if extracted_events := extractor.extract(subscriptions):
                 events.extend(extracted_events)
 
         if events:
@@ -289,11 +290,7 @@ class EventSubscriber:
         return self._listening
 
     def is_subscribed(self, event):
-        for sub in self._subscriptions:
-            if event in sub:
-                return True
-
-        return False
+        return any(event in sub for sub in self._subscriptions)
 
     @property
     def subscriptions(self):

@@ -100,8 +100,7 @@ class MockBlockStore(BlockStore):
 
     def make_mock_block(self, base_id, root=b'merkle_root'.hex()):
         block_id = 'b' * (128 - len(base_id)) + base_id
-        head = self.chain_head
-        if head:
+        if head := self.chain_head:
             previous_id = head.header_signature
             num = head.header.block_num + 1
         else:
@@ -120,12 +119,11 @@ class MockBlockStore(BlockStore):
             consensus=b'consensus',
             state_root_hash=root)
 
-        block = Block(
+        return Block(
             header=header.SerializeToString(),
             header_signature=block_id,
-            batches=[batch])
-
-        return block
+            batches=[batch],
+        )
 
     def add_block(self, base_id, root=b'merkle_root'.hex()):
         self.put_blocks([self.make_mock_block(base_id, root)])

@@ -134,7 +134,7 @@ class BlockListTests(BaseApiTest):
         self.connection.preset_response(
             head_id=ID_B, paging=paging, blocks=blocks)
 
-        response = await self.get_assert_200('/blocks?head={}'.format(ID_B))
+        response = await self.get_assert_200(f'/blocks?head={ID_B}')
         controls = Mocks.make_paging_controls()
         self.connection.assert_valid_request_sent(
             head_id=ID_B, paging=controls)
@@ -159,8 +159,7 @@ class BlockListTests(BaseApiTest):
             - an error property with a code of 50
         """
         self.connection.preset_response(self.status.NO_ROOT)
-        response = await self.get_assert_status('/blocks?head={}'.format(ID_D),
-                                                404)
+        response = await self.get_assert_status(f'/blocks?head={ID_D}', 404)
 
         self.assert_has_valid_error(response, 50)
 
@@ -192,8 +191,7 @@ class BlockListTests(BaseApiTest):
         self.connection.preset_response(
             head_id=ID_C, paging=paging, blocks=blocks)
 
-        response = await self.get_assert_200('/blocks?id={},{}'.format(
-            ID_A, ID_C))
+        response = await self.get_assert_200(f'/blocks?id={ID_A},{ID_C}')
         controls = Mocks.make_paging_controls()
         self.connection.assert_valid_request_sent(
             block_ids=[ID_A, ID_C], paging=controls)
@@ -226,8 +224,7 @@ class BlockListTests(BaseApiTest):
         paging = Mocks.make_paging_response("", ID_C, DEFAULT_LIMIT)
         self.connection.preset_response(
             self.status.NO_RESOURCE, head_id=ID_C, paging=paging)
-        response = await self.get_assert_200('/blocks?id={},{}'.format(
-            ID_B, ID_D))
+        response = await self.get_assert_200(f'/blocks?id={ID_B},{ID_D}')
 
         self.assert_has_valid_head(response, ID_C)
         link = '/blocks?head={ID_C}&start={ID_C}&limit=100&id={ID_B},{ID_D}'
@@ -265,8 +262,7 @@ class BlockListTests(BaseApiTest):
         self.connection.preset_response(
             head_id=ID_B, paging=paging, blocks=blocks)
 
-        response = await self.get_assert_200('/blocks?id={}&head={}'.format(
-            ID_A, ID_B))
+        response = await self.get_assert_200(f'/blocks?id={ID_A}&head={ID_B}')
         self.connection.assert_valid_request_sent(
             head_id=ID_B,
             block_ids=[ID_A],
@@ -317,10 +313,13 @@ class BlockListTests(BaseApiTest):
 
         self.assert_has_valid_head(response, ID_D)
         self.assert_has_valid_link(
-            response, '/blocks?head={}&start=0x0003&limit=1'.format(ID_D))
+            response, f'/blocks?head={ID_D}&start=0x0003&limit=1'
+        )
+
         self.assert_has_valid_paging(
-            response, paging,
-            '/blocks?head={}&start=0x0002&limit=1'.format(ID_D))
+            response, paging, f'/blocks?head={ID_D}&start=0x0002&limit=1'
+        )
+
         self.assert_has_valid_data_list(response, 1)
         self.assert_blocks_well_formed(response['data'], ID_C)
 
@@ -387,10 +386,13 @@ class BlockListTests(BaseApiTest):
 
         self.assert_has_valid_head(response, ID_D)
         self.assert_has_valid_link(
-            response, '/blocks?head={}&start=0x0004&limit=2'.format(ID_D))
+            response, f'/blocks?head={ID_D}&start=0x0004&limit=2'
+        )
+
         self.assert_has_valid_paging(
-            response, paging,
-            '/blocks?head={}&start=0x0002&limit=2'.format(ID_D))
+            response, paging, f'/blocks?head={ID_D}&start=0x0002&limit=2'
+        )
+
         self.assert_has_valid_data_list(response, 2)
         self.assert_blocks_well_formed(response['data'], ID_D, ID_C)
 
@@ -426,7 +428,9 @@ class BlockListTests(BaseApiTest):
 
         self.assert_has_valid_head(response, ID_D)
         self.assert_has_valid_link(
-            response, '/blocks?head={}&start=0x0002&limit=100'.format(ID_D))
+            response, f'/blocks?head={ID_D}&start=0x0002&limit=100'
+        )
+
         self.assert_has_valid_paging(response, paging)
         self.assert_has_valid_data_list(response, 2)
         self.assert_blocks_well_formed(response['data'], ID_B, ID_A)
@@ -463,7 +467,9 @@ class BlockListTests(BaseApiTest):
 
         self.assert_has_valid_head(response, ID_D)
         self.assert_has_valid_link(
-            response, '/blocks?head={}&start=0x0003&limit=5'.format(ID_D))
+            response, f'/blocks?head={ID_D}&start=0x0003&limit=5'
+        )
+
         self.assert_has_valid_paging(response, paging)
         self.assert_has_valid_data_list(response, 3)
         self.assert_blocks_well_formed(response['data'], ID_C, ID_B, ID_A)
@@ -540,11 +546,11 @@ class BlockGetTests(BaseApiTest):
         """
         self.connection.preset_response(block=Mocks.make_blocks(ID_B)[0])
 
-        response = await self.get_assert_200('/blocks/{}'.format(ID_B))
+        response = await self.get_assert_200(f'/blocks/{ID_B}')
         self.connection.assert_valid_request_sent(block_id=ID_B)
 
         self.assertNotIn('head', response)
-        self.assert_has_valid_link(response, '/blocks/{}'.format(ID_B))
+        self.assert_has_valid_link(response, f'/blocks/{ID_B}')
         self.assertIn('data', response)
         self.assert_blocks_well_formed(response['data'], ID_B)
 
@@ -560,7 +566,7 @@ class BlockGetTests(BaseApiTest):
             - an error property with a code of 10
         """
         self.connection.preset_response(self.status.INTERNAL_ERROR)
-        response = await self.get_assert_status('/blocks/{}'.format(ID_B), 500)
+        response = await self.get_assert_status(f'/blocks/{ID_B}', 500)
 
         self.assert_has_valid_error(response, 10)
 
@@ -576,6 +582,6 @@ class BlockGetTests(BaseApiTest):
             - an error property with a code of 70
         """
         self.connection.preset_response(self.status.NO_RESOURCE)
-        response = await self.get_assert_status('/blocks/{}'.format(ID_D), 404)
+        response = await self.get_assert_status(f'/blocks/{ID_D}', 404)
 
         self.assert_has_valid_error(response, 70)

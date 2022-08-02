@@ -51,14 +51,10 @@ class MockIdentityView:
         self.policies = policies
 
     def get_role(self, role_name):
-        if role_name in self.roles:
-            return self.roles[role_name]
-        return None
+        return self.roles[role_name] if role_name in self.roles else None
 
     def get_policy(self, policy_name):
-        if policy_name in self.policies:
-            return self.policies[policy_name]
-        return None
+        return self.policies[policy_name] if policy_name in self.policies else None
 
 
 def make_policy(name, rules):
@@ -73,5 +69,4 @@ def make_policy(name, rules):
             entry = Policy.Entry(type=Policy.DENY_KEY,
                                  key=rule[1])
             entries.append(entry)
-    policy = Policy(name=name, entries=entries)
-    return policy
+    return Policy(name=name, entries=entries)

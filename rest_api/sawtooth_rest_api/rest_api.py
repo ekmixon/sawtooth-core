@@ -187,7 +187,7 @@ def main():
         rest_api_config = load_rest_api_config(opts_config)
         url = None
         if "tcp://" not in rest_api_config.connect:
-            url = "tcp://" + rest_api_config.connect
+            url = f"tcp://{rest_api_config.connect}"
         else:
             url = rest_api_config.connect
 
@@ -212,8 +212,10 @@ def main():
             host = host.replace("[", "").replace("]", "")
             port = int(port)
         except ValueError as e:
-            print("Unable to parse binding {}: Must be in the format"
-                  " host:port".format(rest_api_config.bind[0]))
+            print(
+                f"Unable to parse binding {rest_api_config.bind[0]}: Must be in the format host:port"
+            )
+
             sys.exit(1)
 
         wrapped_registry = None
@@ -247,7 +249,7 @@ def main():
             int(rest_api_config.timeout),
             wrapped_registry,
             client_max_size=rest_api_config.client_max_size)
-        # pylint: disable=broad-except
+            # pylint: disable=broad-except
     except Exception as e:
         LOGGER.exception(e)
         sys.exit(1)

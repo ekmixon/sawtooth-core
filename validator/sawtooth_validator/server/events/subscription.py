@@ -28,29 +28,18 @@ class EventSubscription:
 
     def __init__(self, event_type, filters=None):
         self.event_type = event_type
-        if filters:
-            self.filters = filters
-        else:
-            self.filters = []
+        self.filters = filters or []
 
     def __eq__(self, other):
         if self.event_type != other.event_type:
             return False
 
-        for f in self.filters:
-            if f not in other.filters:
-                return False
-
-        return True
+        return all(f in other.filters for f in self.filters)
 
     def __contains__(self, event):
         """Returns whether this events belongs within this subscriptions."""
         if event.event_type == self.event_type:
-            for sub_filter in self.filters:
-                if event not in sub_filter:
-                    return False
-            return True
-
+            return all(event in sub_filter for sub_filter in self.filters)
         return False
 
 
@@ -72,8 +61,7 @@ class EventFilterFactory:
         try:
             return self.filter_types[filter_type](key, match_string)
         except KeyError:
-            raise InvalidFilterError(
-                "Unknown filter type: {}".format(filter_type)) from KeyError
+            raise InvalidFilterError(f"Unknown filter type: {filter_type}") from KeyError
 
 
 class EventFilter(metaclass=ABCMeta):
@@ -84,10 +72,11 @@ class EventFilter(metaclass=ABCMeta):
         self.key = key
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return False
-        return self.key == other.key \
-            and self.match_string == other.match_string
+        return (
+            self.key == other.key and self.match_string == other.match_string
+            if isinstance(other, self.__class__)
+            else False
+        )
 
     def __contains__(self, event):
         return self.matches(event)
@@ -100,20 +89,18 @@ class EventFilter(metaclass=ABCMeta):
 
 class SimpleAnyFilter(EventFilter):
     def matches(self, event):
-        for attribute in event.attributes:
-            if self.key == attribute.key:
-                if self.match_string == attribute.value:
-                    return True
-        return False
+        return any(
+            self.key == attribute.key and self.match_string == attribute.value
+            for attribute in event.attributes
+        )
 
 
 class SimpleAllFilter(EventFilter):
     def matches(self, event):
-        for attribute in event.attributes:
-            if self.key == attribute.key:
-                if self.match_string != attribute.value:
-                    return False
-        return True
+        return not any(
+            self.key == attribute.key and self.match_string != attribute.value
+            for attribute in event.attributes
+        )
 
 
 class RegexAnyFilter(EventFilter):
@@ -142,15 +129,14 @@ class RegexAnyFilter(EventFilter):
             self.regex = re.compile(match_string)
         except Exception as e:
             raise InvalidFilterError(
-                "Invalid regular expression: {}: {}".format(
-                    match_string, str(e))) from e
+                f"Invalid regular expression: {match_string}: {str(e)}"
+            ) from e
 
     def matches(self, event):
-        for attribute in event.attributes:
-            if self.key == attribute.key:
-                if self.regex.search(attribute.value):
-                    return True
-        return False
+        return any(
+            self.key == attribute.key and self.regex.search(attribute.value)
+            for attribute in event.attributes
+        )
 
 
 class RegexAllFilter(EventFilter):
@@ -179,12 +165,11 @@ class RegexAllFilter(EventFilter):
             self.regex = re.compile(match_string)
         except Exception as e:
             raise InvalidFilterError(
-                "Invalid regular expression: {}: {}".format(
-                    match_string, str(e))) from e
+                f"Invalid regular expression: {match_string}: {str(e)}"
+            ) from e
 
     def matches(self, event):
-        for attribute in event.attributes:
-            if self.key == attribute.key:
-                if not self.regex.search(attribute.value):
-                    return False
-        return True
+        return not any(
+            self.key == attribute.key and not self.regex.search(attribute.value)
+            for attribute in event.attributes
+        )

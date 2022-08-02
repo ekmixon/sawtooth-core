@@ -75,7 +75,7 @@ def _exec(library, name, *args):
     if res == ErrorCode.UnknownBlock:
         raise KeyError("Unknown block")
 
-    raise TypeError("Unknown error occurred: {}".format(res.error))
+    raise TypeError(f"Unknown error occurred: {res.error}")
 
 
 class ErrorCode(IntEnum):

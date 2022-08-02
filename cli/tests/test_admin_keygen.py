@@ -32,16 +32,13 @@ class TestKeygen(unittest.TestCase):
         cls._parser = None
         cls._key_dir = get_key_dir()
         cls._key_name = 'test_key'
-        cls._priv_filename = os.path.join(cls._key_dir,
-                                          cls._key_name + '.priv')
-        cls._pub_filename = os.path.join(cls._key_dir,
-                                         cls._key_name + '.pub')
+        cls._priv_filename = os.path.join(cls._key_dir, f'{cls._key_name}.priv')
+        cls._pub_filename = os.path.join(cls._key_dir, f'{cls._key_name}.pub')
         if not os.path.exists(cls._key_dir):
             try:
                 os.makedirs(cls._key_dir, exist_ok=True)
             except OSError as e:
-                print('Unable to create {}: {}'.format(cls._key_dir, e),
-                      file=sys.stderr)
+                print(f'Unable to create {cls._key_dir}: {e}', file=sys.stderr)
                 sys.exit(1)
 
     def setUp(self):

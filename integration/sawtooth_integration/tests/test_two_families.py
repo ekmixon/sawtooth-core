@@ -104,10 +104,7 @@ class TestTwoFamilies(unittest.TestCase):
 
         for intkey_cmd, xo_cmd in commands:
             _send_intkey_cmd(signer, intkey_cmd)
-            _send_xo_cmd('{} --url {} --wait {}'.format(
-                xo_cmd,
-                'http://rest-api:8008',
-                WAIT))
+            _send_xo_cmd(f'{xo_cmd} --url http://rest-api:8008 --wait {WAIT}')
 
             if intkey_cmd == self.intkey_verifier.valid_txns:
                 how_many_updates += 1
@@ -223,7 +220,7 @@ def _post_batch(batch):
     headers = {'Content-Type': 'application/octet-stream'}
     response = _query_rest_api(
         '/batches', data=batch, headers=headers, expected_code=202)
-    return _submit_request('{}&wait={}'.format(response['link'], WAIT))
+    return _submit_request(f"{response['link']}&wait={WAIT}")
 
 
 def _get_intkey_data():
@@ -231,8 +228,7 @@ def _get_intkey_data():
     # state is a list of dictionaries: { data: ..., address: ... }
     dicts = [cbor.loads(b64decode(entry['data'])) for entry in state]
     LOGGER.debug(dicts)
-    data = {k: v for d in dicts for k, v in d.items()}  # merge dicts
-    return data
+    return {k: v for d in dicts for k, v in d.items()}
 
 
 def _get_xo_data():
@@ -243,24 +239,22 @@ def _get_xo_data():
 
 
 def _get_intkey_state():
-    state = _get_state_prefix(INTKEY_PREFIX)
-    return state
+    return _get_state_prefix(INTKEY_PREFIX)
 
 
 def _get_xo_state():
-    state = _get_state_prefix(XO_PREFIX)
-    return state
+    return _get_state_prefix(XO_PREFIX)
 
 
 def _get_state_prefix(prefix):
-    response = _query_rest_api('/state?address=' + prefix)
+    response = _query_rest_api(f'/state?address={prefix}')
     return response['data']
 
 
 def _query_rest_api(suffix='', data=None, headers=None, expected_code=200):
     if headers is None:
         headers = {}
-    url = 'http://rest-api:8008' + suffix
+    url = f'http://rest-api:8008{suffix}'
     return _submit_request(
         urllib.request.Request(url, data, headers),
         expected_code=expected_code)
@@ -279,12 +273,12 @@ def _submit_request(request, expected_code=200):
 class XoTestVerifier:
     def __init__(self):
         self.xo_cmds = (
-            'xo create game --wait {}'.format(WAIT),
-            'xo take game 5 --wait {}'.format(WAIT),
-            'xo take game 5 --wait {}'.format(WAIT),
-            'xo take game 9 --wait {}'.format(WAIT),
-            'xo create game --wait {}'.format(WAIT),
-            'xo take game 4 --wait {}'.format(WAIT),
+            f'xo create game --wait {WAIT}',
+            f'xo take game 5 --wait {WAIT}',
+            f'xo take game 5 --wait {WAIT}',
+            f'xo take game 9 --wait {WAIT}',
+            f'xo create game --wait {WAIT}',
+            f'xo take game 4 --wait {WAIT}',
         )
 
     def state_after_n_updates(self, num):

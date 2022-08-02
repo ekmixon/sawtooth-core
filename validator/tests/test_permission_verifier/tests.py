@@ -72,11 +72,10 @@ class TestPermissionVerifier(unittest.TestCase):
                 'Value': 1,
             }
 
-            intkey_prefix = \
-                hashlib.sha512('intkey'.encode('utf-8')).hexdigest()[0:6]
+            intkey_prefix = hashlib.sha512('intkey'.encode('utf-8')).hexdigest()[:6]
 
             addr = intkey_prefix + \
-                hashlib.sha512(payload["Name"].encode('utf-8')).hexdigest()
+                    hashlib.sha512(payload["Name"].encode('utf-8')).hexdigest()
 
             payload_encode = hashlib.sha512(cbor.dumps(payload)).hexdigest()
 
@@ -162,7 +161,9 @@ class TestPermissionVerifier(unittest.TestCase):
             2. Set policy to permit some other key. Batch should be rejected.
         """
         self._identity_view_factory.add_policy(
-            "policy1", ["PERMIT_KEY " + self.public_key])
+            "policy1", [f"PERMIT_KEY {self.public_key}"]
+        )
+
         self._identity_view_factory.add_role("transactor", "policy1")
         batch = self._create_batches(1, 1)[0]
         allowed = self.permission_verifier.is_batch_signer_authorized(batch)
@@ -182,7 +183,9 @@ class TestPermissionVerifier(unittest.TestCase):
             2. Set policy to permit some other key. Batch should be rejected.
         """
         self._identity_view_factory.add_policy(
-            "policy1", ["PERMIT_KEY " + self.public_key])
+            "policy1", [f"PERMIT_KEY {self.public_key}"]
+        )
+
         self._identity_view_factory.add_role("transactor.batch_signer",
                                              "policy1")
         batch = self._create_batches(1, 1)[0]
@@ -204,7 +207,9 @@ class TestPermissionVerifier(unittest.TestCase):
             2. Set policy to permit some other key. Batch should be rejected.
         """
         self._identity_view_factory.add_policy(
-            "policy1", ["PERMIT_KEY " + self.public_key])
+            "policy1", [f"PERMIT_KEY {self.public_key}"]
+        )
+
         self._identity_view_factory.add_role("transactor.transaction_signer",
                                              "policy1")
         batch = self._create_batches(1, 1)[0]
@@ -227,7 +232,9 @@ class TestPermissionVerifier(unittest.TestCase):
             2. Set policy to permit some other key. Batch should be rejected.
         """
         self._identity_view_factory.add_policy(
-            "policy1", ["PERMIT_KEY " + self.public_key])
+            "policy1", [f"PERMIT_KEY {self.public_key}"]
+        )
+
         self._identity_view_factory.add_role(
             "transactor.transaction_signer.intkey",
             "policy1")
@@ -258,7 +265,7 @@ class TestPermissionVerifier(unittest.TestCase):
             1. Set policy to permit signing key. Batch should be allowed.
             2. Set policy to permit some other key. Batch should be rejected.
         """
-        policy = make_policy("policy1", ["PERMIT_KEY " + self.public_key])
+        policy = make_policy("policy1", [f"PERMIT_KEY {self.public_key}"])
         self.permissions["transactor"] = policy
         batch = self._create_batches(1, 1)[0]
         allowed = self.permission_verifier.check_off_chain_batch_roles(batch)
@@ -277,7 +284,7 @@ class TestPermissionVerifier(unittest.TestCase):
             1. Set policy to permit signing key. Batch should be allowed.
             2. Set policy to permit some other key. Batch should be rejected.
         """
-        policy = make_policy("policy1", ["PERMIT_KEY " + self.public_key])
+        policy = make_policy("policy1", [f"PERMIT_KEY {self.public_key}"])
         self.permissions["transactor.batch_signer"] = policy
         batch = self._create_batches(1, 1)[0]
         allowed = self.permission_verifier.check_off_chain_batch_roles(batch)
@@ -297,7 +304,7 @@ class TestPermissionVerifier(unittest.TestCase):
             2. Set policy to permit some other key. Batch should be rejected.
 
         """
-        policy = make_policy("policy1", ["PERMIT_KEY " + self.public_key])
+        policy = make_policy("policy1", [f"PERMIT_KEY {self.public_key}"])
         self.permissions["transactor.transaction_signer"] = policy
         batch = self._create_batches(1, 1)[0]
         allowed = self.permission_verifier.check_off_chain_batch_roles(batch)
@@ -316,7 +323,7 @@ class TestPermissionVerifier(unittest.TestCase):
             1. Set policy to permit signing key. Batch should be allowed.
             2. Set policy to permit some other key. Batch should be rejected.
         """
-        policy = make_policy("policy1", ["PERMIT_KEY " + self.public_key])
+        policy = make_policy("policy1", [f"PERMIT_KEY {self.public_key}"])
         self.permissions["transactor.transaction_signer.intkey"] = policy
         batch = self._create_batches(1, 1)[0]
         allowed = self.permission_verifier.check_off_chain_batch_roles(batch)
@@ -359,7 +366,9 @@ class TestPermissionVerifier(unittest.TestCase):
                 rejected.
         """
         self._identity_view_factory.add_policy(
-            "policy1", ["PERMIT_KEY " + self.public_key])
+            "policy1", [f"PERMIT_KEY {self.public_key}"]
+        )
+
 
         self._identity_view_factory.add_role(
             "network",
@@ -410,7 +419,9 @@ class TestPermissionVerifier(unittest.TestCase):
                 rejected.
         """
         self._identity_view_factory.add_policy(
-            "policy1", ["PERMIT_KEY " + self.public_key])
+            "policy1", [f"PERMIT_KEY {self.public_key}"]
+        )
+
 
         self._identity_view_factory.add_role(
             "network.consensus",
@@ -456,11 +467,12 @@ class TestIdentityObserver(unittest.TestCase):
             block_num=85,
             state_root_hash="0987654321fedcba",
             previous_block_id=previous_block_id)
-        block = BlockWrapper(
+        return BlockWrapper(
             Block(
                 header_signature="abcdef1234567890",
-                header=block_header.SerializeToString()))
-        return block
+                header=block_header.SerializeToString(),
+            )
+        )
 
     def test_chain_update(self):
         """

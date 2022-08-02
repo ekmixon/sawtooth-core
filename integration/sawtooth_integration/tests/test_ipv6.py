@@ -36,8 +36,7 @@ EXPECTED = {
 
 class TestIPv6(unittest.TestCase):
     def setUp(self):
-        endpoints = ['rest-api-{}-ipv6:8008'.format(i)
-                     for i in range(len(EXPECTED))]
+        endpoints = [f'rest-api-{i}-ipv6:8008' for i in range(len(EXPECTED))]
 
         wait_for_rest_apis(endpoints)
 
@@ -82,9 +81,12 @@ class TestIPv6(unittest.TestCase):
         }
 
         for node_number in EXPECTED:
-            status = json.loads(_run_peer_command(
-                'sawtooth status show --url {}'.format(
-                    _make_http_address(node_number))))
+            status = json.loads(
+                _run_peer_command(
+                    f'sawtooth status show --url {_make_http_address(node_number)}'
+                )
+            )
+
 
             LOGGER.debug(
                 'Node %s status: %s',
@@ -115,16 +117,14 @@ class TestIPv6(unittest.TestCase):
 
         # make sure pretty-print option works
         subprocess.run(
-            shlex.split(
-                'sawnet peers list {} --pretty'.format(http_addresses)
-            ), check=True
+            shlex.split(f'sawnet peers list {http_addresses} --pretty'), check=True
         )
 
+
         sawnet_peers_output = json.loads(
-            _run_peer_command(
-                'sawnet peers list {}'.format(http_addresses)
-            )
+            _run_peer_command(f'sawnet peers list {http_addresses}')
         )
+
 
         self.assertEqual(
             sawnet_peers_output,
@@ -133,17 +133,17 @@ class TestIPv6(unittest.TestCase):
         # run `sawnet peers graph`, but don't verify output
         subprocess.run(
             shlex.split(
-                'sawnet peers graph -o peers-ipv6.dot --force {}'.format(
-                    http_addresses)
-            ), check=True
+                f'sawnet peers graph -o peers-ipv6.dot --force {http_addresses}'
+            ),
+            check=True,
         )
 
 
 def _get_peers(node_number, fmt='json'):
     cmd_output = _run_peer_command(
-        'sawtooth peer list --url {} --format {}'.format(
-            _make_http_address(node_number),
-            fmt))
+        f'sawtooth peer list --url {_make_http_address(node_number)} --format {fmt}'
+    )
+
 
     if fmt == 'json':
         parsed = json.loads(cmd_output)
@@ -161,8 +161,8 @@ def _run_peer_command(command):
 
 
 def _make_http_address(node_number):
-    return 'http://rest-api-{}-ipv6:8008'.format(node_number)
+    return f'http://rest-api-{node_number}-ipv6:8008'
 
 
 def _make_tcp_address(node_number):
-    return 'tcp://validator-{}-ipv6:8800'.format(node_number)
+    return f'tcp://validator-{node_number}-ipv6:8800'

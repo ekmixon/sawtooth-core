@@ -377,9 +377,10 @@ class TestProxy(unittest.TestCase):
         self.assertEqual(
             self._proxy.state_get(b'block', [address_1, address_2]),
             [
-                (address_1, 'mock-{}'.format(address_1).encode()),
-                (address_2, 'mock-{}'.format(address_2).encode()),
-            ])
+                (address_1, f'mock-{address_1}'.encode()),
+                (address_2, f'mock-{address_2}'.encode()),
+            ],
+        )
 
 
 class TestRegistry(unittest.TestCase):
@@ -467,7 +468,7 @@ class MockConsensusRegistry(Mock):
 
 class MockGossip(Mock):
     def peer_to_public_key(self, peer):
-        return 'mock-{}'.format(peer)
+        return f'mock-{peer}'
 
     def get_peers(self):
         return []
@@ -488,9 +489,9 @@ class MockIdentitySigner(Mock):
 
 class MockStateView:
     def get(self, address):
-        return 'mock-{}'.format(address).encode()
+        return f'mock-{address}'.encode()
 
 
 class MockSettingsView:
     def get_setting(self, key):
-        return 'mock-{}'.format(key)
+        return f'mock-{key}'

@@ -322,7 +322,7 @@ class _SendReceive:
         while True:
             try:
                 zmq_identity, msg_bytes = \
-                    yield from self._dispatcher_queue.get()
+                        yield from self._dispatcher_queue.get()
                 self._get_queue_size_gauge(self.connection).set_value(
                     self._dispatcher_queue.qsize())
                 message = validator_pb2.Message()
@@ -333,10 +333,10 @@ class _SendReceive:
 
                 if zmq_identity is not None:
                     connection_id = \
-                        self._identity_to_connection_id(zmq_identity)
+                            self._identity_to_connection_id(zmq_identity)
                 else:
                     connection_id = \
-                        self._identity_to_connection_id(
+                            self._identity_to_connection_id(
                             self._connection.encode())
                 try:
                     self._futures.set_result(
@@ -407,7 +407,7 @@ class _SendReceive:
             if connection_id in self._connections:
                 connection_info = self._connections.get(connection_id)
                 if connection_info.connection_type == \
-                        ConnectionType.ZMQ_IDENTITY:
+                            ConnectionType.ZMQ_IDENTITY:
                     zmq_identity = connection_info.connection
             else:
                 LOGGER.debug("Can't send to %s, not in self._connections",
@@ -432,10 +432,13 @@ class _SendReceive:
 
     @asyncio.coroutine
     def _send_last_message(self, identity, msg):
-        LOGGER.debug("%s sending last message %s to %s",
-                     self._connection,
-                     get_enum_name(msg.message_type),
-                     identity if identity else self._address)
+        LOGGER.debug(
+            "%s sending last message %s to %s",
+            self._connection,
+            get_enum_name(msg.message_type),
+            identity or self._address,
+        )
+
 
         if identity is None:
             message_bundle = [msg.SerializeToString()]
@@ -534,12 +537,12 @@ class _SendReceive:
             None
         """
         try:
-            if self._secured:
-                if self._server_public_key is None or \
-                        self._server_private_key is None:
-                    raise LocalConfigurationError(
-                        "Attempting to start socket in secure mode, "
-                        "but complete server keys were not provided")
+            if self._secured and (
+                self._server_public_key is None or self._server_private_key is None
+            ):
+                raise LocalConfigurationError(
+                    "Attempting to start socket in secure mode, "
+                    "but complete server keys were not provided")
 
             self._event_loop = zmq.asyncio.ZMQEventLoop()
             asyncio.set_event_loop(self._event_loop)
@@ -587,8 +590,9 @@ class _SendReceive:
                     self._socket.bind(self._address)
                 except zmq.error.ZMQError as e:
                     raise LocalConfigurationError(
-                        "Can't bind to {}: {}".format(self._address,
-                                                      str(e))) from e
+                        f"Can't bind to {self._address}: {str(e)}"
+                    ) from e
+
                 else:
                     LOGGER.info("Listening on %s", self._address)
 
@@ -612,8 +616,7 @@ class _SendReceive:
             self._dispatcher_queue = asyncio.Queue()
 
             if self._monitor:
-                self._monitor_fd = "inproc://monitor.s-{}".format(
-                    _generate_id()[0:5])
+                self._monitor_fd = f"inproc://monitor.s-{_generate_id()[:5]}"
                 self._monitor_sock = self._socket.get_monitor_socket(
                     zmq.EVENT_DISCONNECTED,
                     addr=self._monitor_fd)
@@ -832,11 +835,14 @@ class Interconnect:
         Get stored connection id for a public key.
         """
         with self._connections_lock:
-            for connection_id, connection_info in self._connections.items():
-                if connection_info.public_key == public_key:
-                    return connection_id
-
-            return None
+            return next(
+                (
+                    connection_id
+                    for connection_id, connection_info in self._connections.items()
+                    if connection_info.public_key == public_key
+                ),
+                None,
+            )
 
     def connection_id_to_endpoint(self, connection_id):
         """
@@ -1088,8 +1094,11 @@ class Interconnect:
     def send_all(self, message_type, data):
         futures = []
         with self._connections_lock:
-            for connection_id in self._connections:
-                futures.append(self.send(message_type, data, connection_id))
+            futures.extend(
+                self.send(message_type, data, connection_id)
+                for connection_id in self._connections
+            )
+
         return futures
 
     def send(self, message_type, data, connection_id, callback=None,
@@ -1102,10 +1111,10 @@ class Interconnect:
         :return: future.Future
         """
         if connection_id not in self._connections:
-            raise ValueError("Unknown connection id: {}".format(connection_id))
+            raise ValueError(f"Unknown connection id: {connection_id}")
         connection_info = self._connections.get(connection_id)
         if connection_info.connection_type == \
-                ConnectionType.ZMQ_IDENTITY:
+                    ConnectionType.ZMQ_IDENTITY:
             message = validator_pb2.Message(
                 correlation_id=_generate_id(),
                 content=data,
@@ -1281,10 +1290,10 @@ class Interconnect:
         :return: future.Future
         """
         if connection_id not in self._connections:
-            raise ValueError("Unknown connection id: {}".format(connection_id))
+            raise ValueError(f"Unknown connection id: {connection_id}")
         connection_info = self._connections.get(connection_id)
         if connection_info.connection_type == \
-                ConnectionType.ZMQ_IDENTITY:
+                    ConnectionType.ZMQ_IDENTITY:
             message = validator_pb2.Message(
                 correlation_id=_generate_id(),
                 content=data,
@@ -1308,16 +1317,11 @@ class Interconnect:
             callback=callback)
 
     def has_connection(self, connection_id):
-        if connection_id in self._connections:
-            return True
-        return False
+        return connection_id in self._connections
 
     def is_outbound_connection(self, connection_id):
         connection_info = self._connections[connection_id]
-        if connection_info.connection_type == \
-                ConnectionType.OUTBOUND_CONNECTION:
-            return True
-        return False
+        return connection_info.connection_type == ConnectionType.OUTBOUND_CONNECTION
 
     def _safe_send(self, message_type, message, connection_id, callback=None):
         try:
@@ -1356,7 +1360,7 @@ class OutboundConnection:
         self._connection_id = None
 
         self._send_receive_thread = _SendReceive(
-            "OutboundConnectionThread-{}".format(self._endpoint),
+            f"OutboundConnectionThread-{self._endpoint}",
             endpoint,
             connections=connections,
             dispatcher=self._dispatcher,
@@ -1366,7 +1370,9 @@ class OutboundConnection:
             server_public_key=server_public_key,
             server_private_key=server_private_key,
             reap=reap,
-            connection_timeout=connection_timeout)
+            connection_timeout=connection_timeout,
+        )
+
 
         self._thread = None
 

@@ -154,15 +154,17 @@ def get_chain_generators(clients, limit):
         except CliException:
             bad_clients.append(i)
 
-    if not heads:
-        return {}, bad_clients
-
-    # Convert the block dictionaries to simpler python data structures to
-    # conserve memory and simplify interactions.
-    return {
-        i: map(SimpleBlock.from_block_dict, c.list_blocks(limit=limit))
-        for i, c in enumerate(good_clients)
-    }, bad_clients
+    return (
+        (
+            {
+                i: map(SimpleBlock.from_block_dict, c.list_blocks(limit=limit))
+                for i, c in enumerate(good_clients)
+            },
+            bad_clients,
+        )
+        if heads
+        else ({}, bad_clients)
+    )
 
 
 def prune_unreporting_peers(graph, unreporting):
@@ -263,7 +265,7 @@ def print_table(graph, tails, node_id_map):
     for _ in range(node_count):
         format_str += '{:<' + str(node_col_width) + '} '
 
-    nodes_header = ["NODE " + str(node_id_map[i]) for i in range(node_count)]
+    nodes_header = [f"NODE {str(node_id_map[i])}" for i in range(node_count)]
     header = format_str.format("NUM", *nodes_header)
     print(header)
     print('-' * len(header))
@@ -449,9 +451,7 @@ def print_block_num_row(block_num, cliques, next_cliques):
 
     def mapper(clique):
         block_id, _ = clique
-        if block_id not in next_cliques:
-            return ' '
-        return '|'
+        return ' ' if block_id not in next_cliques else '|'
 
     format_str = '{:<' + str(n_cliques * 2) + '} {}'
     branches = list(map(mapper, cliques))
@@ -481,20 +481,15 @@ def print_splits(cliques, next_cliques):
         parent, _ = clique
 
         # If this fork continues
-        if parent in next_cliques:
-            # If there is a new fork, print a split
-            if len(next_cliques[parent]) > 1:
-                print_split(i + splits, len(cliques) + splits)
-                splits += 1
+        if parent in next_cliques and len(next_cliques[parent]) > 1:
+            print_split(i + splits, len(cliques) + splits)
+            splits += 1
 
 
 def print_split(column_to_split, total_columns):
     """Print a row that splits the given column into two columns while
     shifting all the following columns."""
-    out = ""
-    for _ in range(column_to_split):
-        out += "| "
-    out += "|\\"
+    out = "".join("| " for _ in range(column_to_split)) + "|\\"
     for _ in range(column_to_split + 1, total_columns):
         out += " \\"
     print(out)
@@ -513,7 +508,7 @@ def get_heights(tails):
 
 
 def get_common_height(tails):
-    block_ids = set(tail[0].ident[:8] for tail in tails)
+    block_ids = {tail[0].ident[:8] for tail in tails}
     return tails[0][0].num, block_ids
 
 

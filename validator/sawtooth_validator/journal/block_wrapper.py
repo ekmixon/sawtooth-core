@@ -49,10 +49,7 @@ class BlockWrapper:
 
     @staticmethod
     def wrap(block):
-        if isinstance(block, BlockWrapper):
-            return block
-
-        return BlockWrapper(block)
+        return block if isinstance(block, BlockWrapper) else BlockWrapper(block)
 
     @property
     def batches(self):
@@ -192,14 +189,7 @@ class BlockWrapper:
             self, settings_view_factory)
 
     def __repr__(self):
-        return "{}({}, S:{}, P:{})". \
-            format(self.identifier, self.block_num,
-                   self.state_root_hash, self.previous_block_id)
+        return f"{self.identifier}({self.block_num}, S:{self.state_root_hash}, P:{self.previous_block_id})"
 
     def __str__(self):
-        return "{} (block_num:{}, state:{}, previous_block_id:{})".format(
-            self.identifier,
-            self.block_num,
-            self.state_root_hash,
-            self.previous_block_id,
-        )
+        return f"{self.identifier} (block_num:{self.block_num}, state:{self.state_root_hash}, previous_block_id:{self.previous_block_id})"

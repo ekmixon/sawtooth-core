@@ -245,9 +245,7 @@ class GossipBroadcastHandler(Handler):
             self._gossip.broadcast_batch(obj, exclude, time_to_live=ttl)
         elif tag == GossipMessage.BLOCK:
             self._gossip.broadcast_block(obj, exclude, time_to_live=ttl)
-        elif tag == GossipMessage.CONSENSUS:
-            pass
-        else:
+        elif tag != GossipMessage.CONSENSUS:
             LOGGER.info("received %s, not BATCH or "
                         "BLOCK or CONSENSUS", tag)
 

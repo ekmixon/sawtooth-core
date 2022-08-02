@@ -123,8 +123,7 @@ class IdentityView:
         ]
         roles = []
         for role_list in rolelist_list:
-            for role in role_list.roles:
-                roles.append(role)
+            roles.extend(iter(role_list.roles))
         return sorted(roles, key=lambda r: r.name)
 
     def get_policy(self, name):
@@ -168,8 +167,7 @@ class IdentityView:
         ]
         policies = []
         for policy_list in policylist_list:
-            for policy in policy_list.policies:
-                policies.append(policy)
+            policies.extend(iter(policy_list.policies))
         return sorted(policies, key=lambda p: p.name)
 
 

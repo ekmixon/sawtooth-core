@@ -60,7 +60,7 @@ class TestBasicAuth(unittest.TestCase):
         In order to get back the correct link, the proxy must both forward the
         host and add a custom RequestHeader of 'X-Forwarded-Path: /sawtooth'.
         """
-        auth = 'Basic {}'.format(b64encode(b'sawtooth:sawtooth').decode())
+        auth = f"Basic {b64encode(b'sawtooth:sawtooth').decode()}"
         LOGGER.info(('\n'
                      'Sending request to "%s",\n'
                      'with "Authorization: %s"'), url, auth)
@@ -75,10 +75,9 @@ class TestBasicAuth(unittest.TestCase):
 
             try:
                 error = json.loads(e.file.read().decode())['error']
-                fail_msg = 'REST API Error: {} - {}:'.format(
-                    error['code'], error['title'])
+                fail_msg = f"REST API Error: {error['code']} - {error['title']}:"
             except json.decoder.JSONDecodeError:
-                fail_msg = 'HTTP Error: {} - {}'.format(e.code, e.msg)
+                fail_msg = f'HTTP Error: {e.code} - {e.msg}'
 
             self.fail(fail_msg)
 

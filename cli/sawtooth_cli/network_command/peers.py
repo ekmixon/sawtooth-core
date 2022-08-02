@@ -30,9 +30,9 @@ def add_peers_parser(subparsers, parent_parser):
     help_text = 'Shows the peering arrangment of a network'
 
     parser = subparsers.add_parser(
-        'peers',
-        help=help_text,
-        description='{}.'.format(help_text))
+        'peers', help=help_text, description=f'{help_text}.'
+    )
+
 
     peers_parsers = parser.add_subparsers(
         title='subcommands',
@@ -49,8 +49,10 @@ def _add_list_parser(parser, parent_parser):
     list_parser = parser.add_parser(
         'list',
         help=help_text,
-        description='{}.'.format(help_text),
-        parents=[parent_parser, base_multinode_parser()])
+        description=f'{help_text}.',
+        parents=[parent_parser, base_multinode_parser()],
+    )
+
 
     list_parser.add_argument(
         '--pretty', '-p',
@@ -64,7 +66,7 @@ def do_peers(args):
     elif args.peers_command == 'graph':
         _do_peers_graph(args)
     else:
-        raise CliException('Invalid command: {}'.format(args.subcommand))
+        raise CliException(f'Invalid command: {args.subcommand}')
 
 
 def _do_peers_list(args):
@@ -99,8 +101,10 @@ def _add_graph_parser(parser, parent_parser):
     graph_parser = parser.add_parser(
         'graph',
         help=help_text,
-        description='{}.'.format(help_text),
-        parents=[parent_parser, base_multinode_parser()])
+        description=f'{help_text}.',
+        parents=[parent_parser, base_multinode_parser()],
+    )
+
 
     graph_parser.add_argument(
         '-o', '--output',
@@ -119,12 +123,10 @@ def _do_peers_graph(args):
 
     status_dict = _get_peer_endpoints(clients)
 
-    path = args.output if args.output else DOT_FILE
+    path = args.output or DOT_FILE
 
     if not args.force and os.path.isfile(path):
-        raise CliException(
-            '{} already exists; '
-            'rerun with `--force` to overwrite'.format(path))
+        raise CliException(f'{path} already exists; rerun with `--force` to overwrite')
 
     with open(path, 'w') as dot:
         print(
@@ -133,9 +135,7 @@ def _do_peers_graph(args):
 
         for node, peers in status_dict.items():
             for peer in peers:
-                print(
-                    '    "{}" -- "{}"'.format(node, peer),
-                    file=dot)
+                print(f'    "{node}" -- "{peer}"', file=dot)
 
         print(
             '}',

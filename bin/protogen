@@ -96,19 +96,23 @@ def protoc_python(src_dir, base_dir, pkg):
                     fout.write(fixed_contents)
 
         # 6. Compile protobuf files
-        _protoc([
-            __file__,
-            "-I=%s" % tmp_dir,
-            "--python_out=%s" % JOIN(TOP_DIR, base_dir),
-        ] + glob("%s/*.proto" % tmp_pkg_dir))
+        _protoc(
+            (
+                [
+                    __file__,
+                    f"-I={tmp_dir}",
+                    f"--python_out={JOIN(TOP_DIR, base_dir)}",
+                ]
+                + glob(f"{tmp_pkg_dir}/*.proto")
+            )
+        )
 
 
 def fix_import(contents, pkg, sub_dir=False):
     pattern = r'^import "(.*)\.proto\"'
-    if sub_dir:
-        template = r'import "%s/\1_pb2/\1.proto"'
-    else:
-        template = r'import "%s/\1.proto"'
+    template = (
+        r'import "%s/\1_pb2/\1.proto"' if sub_dir else r'import "%s/\1.proto"'
+    )
 
     return re.sub(
         pattern,

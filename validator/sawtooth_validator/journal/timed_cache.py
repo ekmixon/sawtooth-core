@@ -75,9 +75,7 @@ class TimedCache(MutableMapping):
 
     def __str__(self):
         with self._lock:
-            out = []
-            for v in self._cache.values():
-                out.append(str(v.value))
+            out = [str(v.value) for v in self._cache.values()]
             return ','.join(out)
 
     @property
@@ -97,8 +95,8 @@ class TimedCache(MutableMapping):
         Remove all expired entries from the cache.
         """
         time_horizon = time.time() - self._keep_time
-        new_cache = {}
-        for (k, v) in self._cache.items():
-            if v.timestamp > time_horizon:
-                new_cache[k] = v
+        new_cache = {
+            k: v for k, v in self._cache.items() if v.timestamp > time_horizon
+        }
+
         self._cache = new_cache

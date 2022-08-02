@@ -70,7 +70,7 @@ class BlockPublisher(BlockPublisherInterface):
         Returns:
             Boolean: True if the candidate block should be claimed.
         """
-        block_header.consensus = "test_mode:{}".format(weight).encode()
+        block_header.consensus = f"test_mode:{weight}".encode()
         return True
 
 
@@ -133,7 +133,4 @@ class ForkResolver(ForkResolverInterface):
             cur_weight = int(cur_fork_head.consensus.decode().split(':')[1])
 
         # chains are ordered by length first, then weight
-        if new_num == cur_num:
-            return new_weight > cur_weight
-
-        return new_num > cur_num
+        return new_weight > cur_weight if new_num == cur_num else new_num > cur_num

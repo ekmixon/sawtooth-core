@@ -54,14 +54,14 @@ def do_peer(args):
         do_peer_list(args)
 
     else:
-        raise CliException('Invalid command: {}'.format(args.subcommand))
+        raise CliException(f'Invalid command: {args.subcommand}')
 
 
 def do_peer_list(args):
     rest_client = RestClient(base_url=args.url)
     peers = sorted(rest_client.list_peers())
 
-    if args.format == 'csv' or args.format == 'default':
+    if args.format in ['csv', 'default']:
         print(','.join(peers))
 
     elif args.format == 'json':

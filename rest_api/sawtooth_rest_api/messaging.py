@@ -85,7 +85,7 @@ class _MessageRouter:
     def expected_replies(self):
         """Returns the correlation ids for the expected replies.
         """
-        return (c_id for c_id in self._futures)
+        return iter(self._futures)
 
     async def await_reply(self, correlation_id, timeout=None):
         """Wait for a reply to a given correlation id.  If a timeout is
@@ -246,7 +246,7 @@ class Connection:
 
         self._ctx = Context.instance()
         self._socket = self._ctx.socket(zmq.DEALER)
-        self._socket.identity = uuid.uuid4().hex.encode()[0:16]
+        self._socket.identity = uuid.uuid4().hex.encode()[:16]
 
         self._msg_router = _MessageRouter()
         self._receiver = _Receiver(self._socket, self._msg_router)
@@ -299,8 +299,7 @@ class Connection:
     async def _do_start(self, reconnect=False):
         self._socket.connect(self._url)
 
-        self._monitor_fd = "inproc://monitor.s-{}".format(
-            uuid.uuid4().hex[0:5])
+        self._monitor_fd = f"inproc://monitor.s-{uuid.uuid4().hex[:5]}"
         self._monitor_sock = self._socket.get_monitor_socket(
             zmq.EVENT_DISCONNECTED,
             addr=self._monitor_fd)

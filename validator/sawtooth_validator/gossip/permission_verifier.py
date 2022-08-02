@@ -97,11 +97,7 @@ class PermissionVerifier:
             role = self._cache.get_role(
                 "transactor", state_root_func, from_state)
 
-        if role is None:
-            policy_name = "default"
-        else:
-            policy_name = role.policy_name
-
+        policy_name = "default" if role is None else role.policy_name
         policy = self._cache.get_policy(
             policy_name, state_root_func, from_state)
         if policy is None:
@@ -151,11 +147,7 @@ class PermissionVerifier:
             role = self._cache.get_role(
                 "transactor", state_root_func, from_state)
 
-        if role is None:
-            policy_name = "default"
-        else:
-            policy_name = role.policy_name
-
+        policy_name = "default" if role is None else role.policy_name
         policy = self._cache.get_policy(
             policy_name, state_root_func, from_state)
 
@@ -166,9 +158,11 @@ class PermissionVerifier:
             family_policy = None
             if header.family_name not in family_roles:
                 role = self._cache.get_role(
-                    "transactor.transaction_signer." + header.family_name,
+                    f"transactor.transaction_signer.{header.family_name}",
                     state_root_func,
-                    from_state)
+                    from_state,
+                )
+
 
                 if role is not None:
                     family_policy = self._cache.get_policy(role.policy_name,
@@ -178,18 +172,18 @@ class PermissionVerifier:
             else:
                 family_policy = family_roles[header.family_name]
 
-            if family_policy is not None:
-                if not self._allowed(header.signer_public_key, family_policy):
-                    LOGGER.debug("Transaction Signer: %s is not permitted.",
-                                 header.signer_public_key)
+            if family_policy is None:
+                if policy is not None and not self._allowed(
+                    header.signer_public_key, policy
+                ):
+                    LOGGER.debug(
+                        "Transaction Signer: %s is not permitted.",
+                        header.signer_public_key)
                     return False
-            else:
-                if policy is not None:
-                    if not self._allowed(header.signer_public_key, policy):
-                        LOGGER.debug(
-                            "Transaction Signer: %s is not permitted.",
-                            header.signer_public_key)
-                        return False
+            elif not self._allowed(header.signer_public_key, family_policy):
+                LOGGER.debug("Transaction Signer: %s is not permitted.",
+                             header.signer_public_key)
+                return False
         return True
 
     def check_off_chain_batch_roles(self, batch):
@@ -257,7 +251,7 @@ class PermissionVerifier:
             header = TransactionHeader()
             header.ParseFromString(transaction.header)
             family_role = "transactor.transaction_signer." + \
-                header.family_name
+                    header.family_name
             family_policy = None
             if family_role in self._permissions:
                 family_policy = self._permissions[family_role]
@@ -302,16 +296,12 @@ class PermissionVerifier:
         self._cache.update_view(state_root)
         role = self._cache.get_role("network", self._current_root_func, True)
 
-        if role is None:
-            policy_name = "default"
-        else:
-            policy_name = role.policy_name
+        policy_name = "default" if role is None else role.policy_name
         policy = self._cache.get_policy(
             policy_name, self._current_root_func, True)
-        if policy is not None:
-            if not self._allowed(public_key, policy):
-                LOGGER.debug("Node is not permitted: %s.", public_key)
-                return False
+        if policy is not None and not self._allowed(public_key, policy):
+            LOGGER.debug("Node is not permitted: %s.", public_key)
+            return False
         return True
 
     def check_network_consensus_role(self, public_key):
@@ -333,18 +323,14 @@ class PermissionVerifier:
         role = self._cache.get_role(
             "network.consensus", self._current_root_func, True)
 
-        if role is None:
-            policy_name = "default"
-        else:
-            policy_name = role.policy_name
+        policy_name = "default" if role is None else role.policy_name
         policy = self._cache.get_policy(
             policy_name, self._current_root_func, True)
-        if policy is not None:
-            if not self._allowed(public_key, policy):
-                LOGGER.debug(
-                    "Node is not permitted to publish blocks: %s.",
-                    public_key)
-                return False
+        if policy is not None and not self._allowed(public_key, policy):
+            LOGGER.debug(
+                "Node is not permitted to publish blocks: %s.",
+                public_key)
+            return False
         return True
 
     def _allowed(self, public_key, policy):
@@ -384,12 +370,14 @@ class BatchListPermissionVerifier(Handler):
                 for batch in message_content.batches):
             return make_response(response_proto.INVALID_BATCH)
 
-        if not all(
+        return (
+            HandlerResult(status=HandlerStatus.PASS)
+            if all(
                 self._verifier.is_batch_signer_authorized(batch)
-                for batch in message_content.batches):
-            return make_response(response_proto.INVALID_BATCH)
-
-        return HandlerResult(status=HandlerStatus.PASS)
+                for batch in message_content.batches
+            )
+            else make_response(response_proto.INVALID_BATCH)
+        )
 
 
 class NetworkPermissionHandler(Handler):

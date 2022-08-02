@@ -159,7 +159,7 @@ class TestSettingsView(unittest.TestCase):
 
     @staticmethod
     def _address(key):
-        return '000000' + _key_to_address(key)
+        return f'000000{_key_to_address(key)}'
 
     @staticmethod
     def _setting_entry(key, value):

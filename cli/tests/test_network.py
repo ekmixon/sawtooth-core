@@ -24,8 +24,7 @@ from sawtooth_cli.network_command.fork_graph import SimpleBlock
 
 
 def make_generator(collection):
-    for item in collection:
-        yield item
+    yield from collection
 
 
 class TestNetworkCompare(unittest.TestCase):

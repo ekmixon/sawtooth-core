@@ -29,11 +29,11 @@ class RestClient:
         self._base_url = base_url or 'http://localhost:8008'
 
         if '://' not in self._base_url.lower():
-            self._base_url = 'http://{}'.format(self._base_url)
+            self._base_url = f'http://{self._base_url}'
 
         if user:
             b64_string = b64encode(user.encode()).decode()
-            self._auth_header = 'Basic {}'.format(b64_string)
+            self._auth_header = f'Basic {b64_string}'
         else:
             self._auth_header = None
 
@@ -46,13 +46,13 @@ class RestClient:
         return self._get_data('/blocks', limit=limit)
 
     def get_block(self, block_id):
-        return self._get('/blocks/' + block_id)['data']
+        return self._get(f'/blocks/{block_id}')['data']
 
     def list_batches(self):
         return self._get_data('/batches')
 
     def get_batch(self, batch_id):
-        return self._get('/batches/' + batch_id)['data']
+        return self._get(f'/batches/{batch_id}')['data']
 
     def list_peers(self):
         return self._get('/peers')['data']
@@ -64,13 +64,13 @@ class RestClient:
         return self._get_data('/transactions')
 
     def get_transaction(self, transaction_id):
-        return self._get('/transactions/' + transaction_id)['data']
+        return self._get(f'/transactions/{transaction_id}')['data']
 
     def list_state(self, subtree=None, head=None):
         return self._get('/state', address=subtree, head=head)
 
     def get_leaf(self, address, head=None):
-        return self._get('/state/' + address, head=head)
+        return self._get(f'/state/{address}', head=head)
 
     def get_statuses(self, batch_ids, wait=None):
         """Fetches the committed status for a list of batch ids.
@@ -164,7 +164,7 @@ class RestClient:
         if code in (200, 201, 202):
             return json_result
 
-        raise CliException("({}): {}".format(code, json_result))
+        raise CliException(f"({code}): {json_result}")
 
     def _submit_request(self, url, params=None, data=None, headers=None,
                         method="GET"):
@@ -208,15 +208,15 @@ class RestClient:
             raise CliException(e) from e
         except requests.exceptions.InvalidSchema as e:
             raise CliException(
-                ('Schema not valid in "{}": '
-                 'make sure URL has valid schema').format(
-                    self._base_url)) from e
+                f'Schema not valid in "{self._base_url}": make sure URL has valid schema'
+            ) from e
+
         except requests.exceptions.ConnectionError as e:
             raise CliException(
-                ('Unable to connect to "{}": '
-                 'make sure URL is correct').format(self._base_url)) from e
+                f'Unable to connect to "{self._base_url}": make sure URL is correct'
+            ) from e
 
     @staticmethod
     def _format_queries(queries):
         queries = {k: v for k, v in queries.items() if v is not None}
-        return queries if queries else ''
+        return queries or ''

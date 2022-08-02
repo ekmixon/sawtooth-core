@@ -55,9 +55,8 @@ class Future:
 
     def result(self, timeout=None):
         with self._condition:
-            if self._result is None:
-                if not self._condition.wait(timeout):
-                    raise FutureTimeoutError('Future timed out')
+            if self._result is None and not self._condition.wait(timeout):
+                raise FutureTimeoutError('Future timed out')
         return self._result
 
     def set_result(self, result):
@@ -125,16 +124,16 @@ class FutureCollection:
             return self._futures[correlation_id]
         except KeyError:
             raise FutureCollectionKeyError(
-                "no such correlation id: {}".format(
-                    correlation_id)) from KeyError
+                f"no such correlation id: {correlation_id}"
+            ) from KeyError
 
     def _remove(self, correlation_id):
         try:
             return self._futures.pop(correlation_id)
         except KeyError:
             raise FutureCollectionKeyError(
-                "no such correlation id: {}".format(
-                    correlation_id)) from KeyError
+                f"no such correlation id: {correlation_id}"
+            ) from KeyError
 
     def remove_expired(self):
         with self._lock:

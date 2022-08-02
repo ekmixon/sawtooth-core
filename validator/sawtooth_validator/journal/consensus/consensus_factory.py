@@ -53,8 +53,8 @@ class ConsensusFactory:
             return importlib.import_module(module_package)
         except ImportError:
             raise UnknownConsensusModuleError(
-                'Consensus module "{}" does not exist.'.format(
-                    module_name)) from ImportError
+                f'Consensus module "{module_name}" does not exist.'
+            ) from ImportError
 
     @staticmethod
     def get_configured_consensus_module(block_id, state_view):

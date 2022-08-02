@@ -120,9 +120,10 @@ class StateDeltaSubscriberHandler:
         try:
             incoming_message = json.loads(message_content)
         except json.decoder.JSONDecodeError:
-            await web_sock.send_str(json.dumps({
-                'error': 'Invalid input: "{}"'.format(message_content)
-            }))
+            await web_sock.send_str(
+                json.dumps({'error': f'Invalid input: "{message_content}"'})
+            )
+
             return
 
         action = incoming_message.get('action', '')
@@ -133,9 +134,7 @@ class StateDeltaSubscriberHandler:
         elif action == 'get_block_deltas':
             await self._handle_get_block_deltas(web_sock, incoming_message)
         else:
-            await web_sock.send_str(json.dumps({
-                'error': 'Unknown action "{}"'.format(action)
-            }))
+            await web_sock.send_str(json.dumps({'error': f'Unknown action "{action}"'}))
 
     async def _handle_subscribe(self, web_sock, subscription_message):
         if not self._subscribers:
@@ -352,14 +351,13 @@ class StateDeltaSubscriberHandler:
 
     @staticmethod
     def _matches_prefixes(state_change, addr_prefixes):
-        if not addr_prefixes:
-            return True
-
-        for prefix in addr_prefixes:
-            if state_change.address.startswith(prefix):
-                return True
-
-        return False
+        return (
+            any(
+                state_change.address.startswith(prefix) for prefix in addr_prefixes
+            )
+            if addr_prefixes
+            else True
+        )
 
     @staticmethod
     def _make_subscriptions(address_prefixes=None):
@@ -399,20 +397,18 @@ class StateDeltaEvent:
 
     @staticmethod
     def _get_attr(event, key):
-        attrs = list(filter(
-            lambda attr: attr.key == key,
-            event.attributes))
-        if attrs:
+        if attrs := list(filter(lambda attr: attr.key == key, event.attributes)):
             return attrs[0].value
         raise KeyError("Key '%s' not found in event attributes" % key)
 
     @staticmethod
     def _get_event(event_type, event_list):
-        events = list(filter(
-            lambda event: event.event_type == event_type,
-            event_list,
-        ))
-        if events:
+        if events := list(
+            filter(
+                lambda event: event.event_type == event_type,
+                event_list,
+            )
+        ):
             return events[0]
         raise KeyError("Event type '%s' not found" % event_type)
 

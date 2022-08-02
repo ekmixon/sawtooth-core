@@ -29,25 +29,17 @@ LOGGER = logging.getLogger(__name__)
 # peering arrangements
 
 def peer_with_genesis_only(num):
-    if num > 0:
-        return '--peers {}'.format(
-            endpoint(0))
-
-    return ''
+    return f'--peers {endpoint(0)}' if num > 0 else ''
 
 
 def peer_to_preceding_only(num):
-    if num > 0:
-        return '--peers {}'.format(
-            endpoint(num - 1))
-
-    return ''
+    return f'--peers {endpoint(num - 1)}' if num > 0 else ''
 
 
 def everyone_peers_with_everyone(num):
     if num > 0:
         peers = ','.join(endpoint(i) for i in range(num))
-        return '--peers {}'.format(peers)
+        return f'--peers {peers}'
 
     return ''
 
@@ -96,7 +88,7 @@ def start_node(num,
                                 sawtooth_home,
                                 validator_cmd_func)
 
-    wait_for_rest_apis(['127.0.0.1:{}'.format(8008 + num)])
+    wait_for_rest_apis([f'127.0.0.1:{8008 + num}'])
 
     return [rest_api] + processors + [engine] + [validator]
 
@@ -139,35 +131,43 @@ def validator_cmds(num,
         peering_func (int -> str): a function of one argument n
             returning a string specifying the peers of the num-th node
     '''
-    keygen = 'sawadm keygen {}'.format(
-        os.path.join(sawtooth_home, 'keys', 'validator'))
+    keygen = f"sawadm keygen {os.path.join(sawtooth_home, 'keys', 'validator')}"
 
-    validator = ' '.join([
-        'sawtooth-validator -v',
-        '--scheduler {}'.format(scheduler_func(num)),
-        '--endpoint {}'.format(endpoint(num)),
-        '--bind component:{}'.format(bind_component(num)),
-        '--bind network:{}'.format(bind_network(num)),
-        '--bind consensus:{}'.format(bind_consensus(num)),
-        peering_func(num)])
+    validator = ' '.join(
+        [
+            'sawtooth-validator -v',
+            f'--scheduler {scheduler_func(num)}',
+            f'--endpoint {endpoint(num)}',
+            f'--bind component:{bind_component(num)}',
+            f'--bind network:{bind_network(num)}',
+            f'--bind consensus:{bind_consensus(num)}',
+            peering_func(num),
+        ]
+    )
+
 
     # genesis stuff
     priv = os.path.join(sawtooth_home, 'keys', 'validator.priv')
 
-    config_genesis = ' '.join([
-        'sawset genesis',
-        '-k {}'.format(priv),
-        '-o {}'.format(os.path.join(
-            sawtooth_home, 'data', 'config-genesis.batch'))
-    ])
+    config_genesis = ' '.join(
+        [
+            'sawset genesis',
+            f'-k {priv}',
+            '-o {}'.format(
+                os.path.join(sawtooth_home, 'data', 'config-genesis.batch')
+            ),
+        ]
+    )
+
 
     genesis = ' '.join([
         'sawadm genesis',
         os.path.join(sawtooth_home, 'data', 'config-genesis.batch')
     ])
 
-    validator_cmd_list = (
-        [keygen, validator] if num > 0
+    return (
+        [keygen, validator]
+        if num > 0
         else [
             keygen,
             config_genesis,
@@ -175,8 +175,6 @@ def validator_cmds(num,
             validator,
         ]
     )
-
-    return validator_cmd_list
 
 
 def simple_validator_cmds(*args, **kwargs):
@@ -221,15 +219,14 @@ def processor_cmds(num, processor_func):
     '''
     processors = processor_func(num)
 
-    processor_cmd_list = [
+    return [
         '{p} {v} -C {a}'.format(
             p=processor,
             v=(processor_verbosity(processor)),
-            a=connection_address(num))
+            a=connection_address(num),
+        )
         for processor in processors
     ]
-
-    return processor_cmd_list
 
 
 def processor_verbosity(processor_name):
@@ -240,11 +237,9 @@ def processor_verbosity(processor_name):
     '''
     acceptably_quiet = 'config', 'registry'
 
-    for keyword in acceptably_quiet:
-        if keyword in processor_name:
-            return '-v'
-
-    return ''
+    return next(
+        ('-v' for keyword in acceptably_quiet if keyword in processor_name), ''
+    )
 
 
 def start_processors(num, processor_func):
@@ -282,31 +277,31 @@ def start_rest_api(num):
 
 # addresses
 def endpoint(num):
-    return 'tcp://127.0.0.1:{}'.format(8800 + num)
+    return f'tcp://127.0.0.1:{8800 + num}'
 
 
 def connection_address(num):
-    return 'tcp://127.0.0.1:{}'.format(4004 + num)
+    return f'tcp://127.0.0.1:{4004 + num}'
 
 
 def engine_connection_address(num):
-    return 'tcp://127.0.0.1:{}'.format(5050 + num)
+    return f'tcp://127.0.0.1:{5050 + num}'
 
 
 def http_address(num):
-    return 'http://127.0.0.1:{}'.format(8008 + num)
+    return f'http://127.0.0.1:{8008 + num}'
 
 
 def bind_component(num):
-    return 'tcp://127.0.0.1:{}'.format(4004 + num)
+    return f'tcp://127.0.0.1:{4004 + num}'
 
 
 def bind_network(num):
-    return 'tcp://127.0.0.1:{}'.format(8800 + num)
+    return f'tcp://127.0.0.1:{8800 + num}'
 
 
 def bind_consensus(num):
-    return 'tcp://127.0.0.1:{}'.format(5050 + num)
+    return f'tcp://127.0.0.1:{5050 + num}'
 
 
 # execution

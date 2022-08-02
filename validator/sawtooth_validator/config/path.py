@@ -76,25 +76,27 @@ def load_toml_path_config(filename):
             raw_config = fd.read()
     except IOError as e:
         raise LocalConfigurationError(
-            "Unable to load path configuration file: {}".format(str(e))) from e
+            f"Unable to load path configuration file: {str(e)}"
+        ) from e
+
 
     toml_config = toml.loads(raw_config)
 
-    invalid_keys = set(toml_config.keys()).difference(
-        ['data_dir', 'key_dir', 'log_dir', 'policy_dir'])
-    if invalid_keys:
-        raise LocalConfigurationError("Invalid keys in path config: {}".format(
-            ", ".join(sorted(list(invalid_keys)))))
+    if invalid_keys := set(toml_config.keys()).difference(
+        ['data_dir', 'key_dir', 'log_dir', 'policy_dir']
+    ):
+        raise LocalConfigurationError(
+            f'Invalid keys in path config: {", ".join(sorted(list(invalid_keys)))}'
+        )
 
-    config = PathConfig(
+
+    return PathConfig(
         config_dir=None,
         data_dir=toml_config.get('data_dir', None),
         key_dir=toml_config.get('key_dir', None),
         log_dir=toml_config.get('log_dir', None),
-        policy_dir=toml_config.get('policy_dir', None)
+        policy_dir=toml_config.get('policy_dir', None),
     )
-
-    return config
 
 
 def merge_path_config(configs, config_dir_override):
@@ -176,15 +178,7 @@ class PathConfig:
         return self._policy_dir
 
     def __repr__(self):
-        return \
-            "{}(config_dir={}, log_dir={}, data_dir={}, key_dir={}," \
-            " policy_dir={})".format(
-                self.__class__.__name__,
-                repr(self._config_dir),
-                repr(self._log_dir),
-                repr(self._data_dir),
-                repr(self._key_dir),
-                repr(self._policy_dir))
+        return f"{self.__class__.__name__}(config_dir={repr(self._config_dir)}, log_dir={repr(self._log_dir)}, data_dir={repr(self._data_dir)}, key_dir={repr(self._key_dir)}, policy_dir={repr(self._policy_dir)})"
 
     def to_dict(self):
         return collections.OrderedDict([

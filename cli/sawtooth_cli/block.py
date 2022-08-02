@@ -68,9 +68,11 @@ def add_block_parser(subparsers, parent_parser):
     show_parser = grand_parsers.add_parser(
         'show',
         help=description,
-        description=description + '.',
+        description=f'{description}.',
         parents=[base_http_parser(), base_show_parser()],
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
     show_parser.add_argument(
         'block_id',
         type=str,
@@ -115,7 +117,7 @@ def do_block(args):
         elif args.format == 'csv':
             fmt.print_csv(headers, blocks, parse_block_row)
 
-        elif args.format == 'json' or args.format == 'yaml':
+        elif args.format in ['json', 'yaml']:
             data = [dict(zip(keys, parse_block_row(b)))for b in blocks]
 
             if args.format == 'yaml':

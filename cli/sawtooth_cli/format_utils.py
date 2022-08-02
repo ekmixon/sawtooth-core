@@ -36,9 +36,7 @@ def format_terminal_row(headers, example_row):
     """
 
     def format_column(col):
-        if isinstance(col, str):
-            return '{{:{w}.{w}}}'
-        return '{{:<{w}}}'
+        return '{{:{w}.{w}}}' if isinstance(col, str) else '{{:<{w}}}'
 
     widths = [max(len(h), len(str(d))) for h, d in zip(headers, example_row)]
 
@@ -46,9 +44,9 @@ def format_terminal_row(headers, example_row):
     original_last_width = widths[-1]
     if sys.stdout.isatty():
         widths[-1] = max(
-            len(headers[-1]),
-            # console width - width of other columns and gutters - 3 for '...'
-            tty.width() - sum(w + 2 for w in widths[0:-1]) - 3)
+            len(headers[-1]), tty.width() - sum(w + 2 for w in widths[:-1]) - 3
+        )
+
 
     # Build format string
     cols = [format_column(c).format(w=w) for c, w in zip(example_row, widths)]
@@ -83,7 +81,7 @@ def print_terminal_table(headers, data_list, parse_row_fn):
     format_string = format_terminal_row(headers, example_row)
 
     top_row = format_string.format(*headers)
-    print(top_row[0:-3] if top_row.endswith('...') else top_row)
+    print(top_row[:-3] if top_row.endswith('...') else top_row)
     for data in data_iter:
         print(format_string.format(*parse_row_fn(data)))
 
@@ -98,7 +96,7 @@ def print_csv(headers, data_list, parse_row_fn):
         for data in data_list:
             writer.writerow(parse_row_fn(data))
     except csv.Error as e:
-        raise CliException('Error writing CSV: {}'.format(e)) from e
+        raise CliException(f'Error writing CSV: {e}') from e
 
 
 def print_json(data):
@@ -114,4 +112,4 @@ def print_json(data):
 def print_yaml(data):
     """Takes any YAML serializable data and prints it to the console.
     """
-    print(yaml.dump(data, default_flow_style=False)[0:-1])
+    print(yaml.dump(data, default_flow_style=False)[:-1])

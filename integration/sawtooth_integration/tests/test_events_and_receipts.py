@@ -48,8 +48,9 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 WAIT = 300
 
-INTKEY_ADDRESS_PREFIX = hashlib.sha512(
-    'intkey'.encode('utf-8')).hexdigest()[0:6]
+INTKEY_ADDRESS_PREFIX = hashlib.sha512('intkey'.encode('utf-8')).hexdigest()[
+    :6
+]
 
 
 def make_intkey_address(name):
@@ -138,7 +139,7 @@ class TestEventsAndReceipts(unittest.TestCase):
         self._subscribe()
 
         blocks = []
-        for i in range(4):
+        for _ in range(4):
             self.batch_submitter.submit_next_batch()
             msg = self.stream.receive().result()
             event_list = events_pb2.EventList()
@@ -210,61 +211,65 @@ class TestEventsAndReceipts(unittest.TestCase):
 
     def _get_receipt(self, num):
         txn_id = \
-            self.batch_submitter.batches[num].transactions[0].header_signature
+                self.batch_submitter.batches[num].transactions[0].header_signature
         request = client_receipt_pb2.ClientReceiptGetRequest(
             transaction_ids=[txn_id])
-        response = self.stream.send(
+        return self.stream.send(
             validator_pb2.Message.CLIENT_RECEIPT_GET_REQUEST,
-            request.SerializeToString()).result()
-        return response
+            request.SerializeToString(),
+        ).result()
 
     def _get_events(self, block_id, subscriptions):
         request = client_event_pb2.ClientEventsGetRequest(
             block_ids=[block_id],
             subscriptions=subscriptions)
-        response = self.stream.send(
+        return self.stream.send(
             validator_pb2.Message.CLIENT_EVENTS_GET_REQUEST,
-            request.SerializeToString()).result()
-        return response
+            request.SerializeToString(),
+        ).result()
 
     def _subscribe(self, subscriptions=None, last_known_block_ids=None):
         if subscriptions is None:
             subscriptions = [
-                events_pb2.EventSubscription(
-                    event_type="sawtooth/block-commit"),
-                # Subscribe to the settings state events, to test genesis
-                # catch-up.
+                events_pb2.EventSubscription(event_type="sawtooth/block-commit"),
                 events_pb2.EventSubscription(
                     event_type="sawtooth/state-delta",
-                    filters=[events_pb2.EventFilter(
-                        key='address',
-                        match_string='000000.*',
-                        filter_type=events_pb2.EventFilter.REGEX_ANY)]),
-                # Subscribe to the intkey state events, to test additional
-                # events.
+                    filters=[
+                        events_pb2.EventFilter(
+                            key='address',
+                            match_string='000000.*',
+                            filter_type=events_pb2.EventFilter.REGEX_ANY,
+                        )
+                    ],
+                ),
                 events_pb2.EventSubscription(
                     event_type="sawtooth/state-delta",
-                    filters=[events_pb2.EventFilter(
-                        key='address',
-                        match_string='{}.*'.format(INTKEY_ADDRESS_PREFIX),
-                        filter_type=events_pb2.EventFilter.REGEX_ANY)]),
+                    filters=[
+                        events_pb2.EventFilter(
+                            key='address',
+                            match_string=f'{INTKEY_ADDRESS_PREFIX}.*',
+                            filter_type=events_pb2.EventFilter.REGEX_ANY,
+                        )
+                    ],
+                ),
             ]
+
         if last_known_block_ids is None:
             last_known_block_ids = []
         request = client_event_pb2.ClientEventsSubscribeRequest(
             subscriptions=subscriptions,
             last_known_block_ids=last_known_block_ids)
-        response = self.stream.send(
+        return self.stream.send(
             validator_pb2.Message.CLIENT_EVENTS_SUBSCRIBE_REQUEST,
-            request.SerializeToString()).result()
-        return response
+            request.SerializeToString(),
+        ).result()
 
     def _unsubscribe(self):
         request = client_event_pb2.ClientEventsUnsubscribeRequest()
-        response = self.stream.send(
+        return self.stream.send(
             validator_pb2.Message.CLIENT_EVENTS_UNSUBSCRIBE_REQUEST,
-            request.SerializeToString()).result()
-        return response
+            request.SerializeToString(),
+        ).result()
 
     def assert_block_commit_event(self, event, block_num):
         self.assertEqual(event.event_type, "sawtooth/block-commit")
@@ -363,14 +368,13 @@ class BatchSubmitter:
             headers=headers,
             expected_code=202)
 
-        return self._submit_request('{}&wait={}'.format(
-            response['link'], self.timeout))
+        return self._submit_request(f"{response['link']}&wait={self.timeout}")
 
     def _query_rest_api(self, suffix='', data=None, headers=None,
                         expected_code=200):
         if headers is None:
             headers = {}
-        url = 'http://rest-api:8008' + suffix
+        url = f'http://rest-api:8008{suffix}'
         return self._submit_request(urllib.request.Request(url, data, headers),
                                     expected_code=expected_code)
 

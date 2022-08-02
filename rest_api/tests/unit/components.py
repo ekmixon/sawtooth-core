@@ -176,8 +176,7 @@ class BaseApiTest(AioHTTPTestCase):
         Returns:
             RouteHandler: The route handlers to handle test queries
         """
-        handlers = RouteHandler(loop, connection, TEST_TIMEOUT)
-        return handlers
+        return RouteHandler(loop, connection, TEST_TIMEOUT)
 
     @staticmethod
     def build_app(loop, endpoint, handler):
@@ -288,8 +287,8 @@ class BaseApiTest(AioHTTPTestCase):
             self.assertTrue(url.endswith(expected_ending))
         except AssertionError:
             raise AssertionError(
-                'Expected "{}" to end with "{}"'.format(
-                    url, expected_ending)) from AssertionError
+                f'Expected "{url}" to end with "{expected_ending}"'
+            ) from AssertionError
 
     def assert_entries_match(self, proto_entries, json_entries):
         """Asserts that each JSON leaf matches the original Protobuf entries

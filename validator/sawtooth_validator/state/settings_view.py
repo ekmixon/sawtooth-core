@@ -122,12 +122,11 @@ class SettingsView:
             If a value is found, it is split using the given delimiter.
         """
         value = self.get_setting(key)
-        if value is not None:
-            setting_list = [value_type(v) for v in value.split(delimiter)]
-        else:
-            setting_list = default_value
-
-        return setting_list
+        return (
+            [value_type(v) for v in value.split(delimiter)]
+            if value is not None
+            else default_value
+        )
 
     @staticmethod
     @lru_cache(maxsize=128)
